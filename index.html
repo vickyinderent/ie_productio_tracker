@@ -99,7 +99,7 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 <body>
 <div id="app"></div>
 <script>
-var API_URL='https://script.google.com/macros/s/AKfycbxozShYJq-PozirW_Wcwvon66vmzUb2Rp0rBzNG29yKPHN8iNi3sWYwXPItQ6fUz8dX/exec';
+var API_URL='https://script.google.com/macros/s/AKfycbyqKh5qJqrjmHnSxTD7QO8jYr5RF5pzuyXX_XUuIRSR88OGyrhOc4lRtiw5YtpNd2yw/exec';
 var MACHINES=['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
 var ADMIN_EMAILS=['vicky@inderent.com','chiranjeev@inderent.com','raoinderjeet@yahoo.com','sachin.s@inderent.com'];
 var SAVE_MS=5*60*1000;
@@ -139,8 +139,13 @@ $('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px
 '<div class="ssc"><div class="ssv orb" style="color:'+(ru/MACHINES.length>=0.7?'var(--green)':'var(--amber)')+'">'+Math.round(ru/MACHINES.length*100)+'%</div><div class="ssl">Util.</div></div></div>'+
 '<div style="padding:3px 16px 6px"><span class="stl">All machines</span></div><div class="mg">'+
 MACHINES.map(function(m,i){var mc=mm[m];var ir=mc.s==='running'&&mc.j;var pc=ir&&mc.j.ap&&COL[mc.j.ap]?COL[mc.j.ap].c:'var(--dim)';var pl=ir&&mc.j.ap&&COL[mc.j.ap]?COL[mc.j.ap].l:'Idle';var el=ir&&mc.j.gs?Math.round(Date.now()/1000-mc.j.gs):0;
-return '<div class="mc fi d'+(i%4+1)+'" onclick="'+(ir?"aVJ('"+e(mc.j.code)+"')":'')+'">'+'<div class="mca" style="background:'+(ir?pc:'var(--border)')+'"></div>'+'<div style="display:flex;align-items:center;justify-content:space-between"><span class="mn orb" style="color:'+(ir?'var(--text)':'var(--dim)')+'">'+m+'</span><span class="mty">'+mc.ty+'</span></div>'+'<div class="ms" style="color:'+pc+'">'+pl+'</div>'+(ir?'<div class="mie mono">'+e(mc.j.ie)+'</div><div class="mp">'+e(mc.j.part)+' &middot; '+e(mc.j.client)+'</div><div class="mtm mono" style="color:'+pc+'">'+fmt(el)+'</div><div style="font-size:8px;color:var(--muted);margin-top:1px">'+e(mc.j.operator)+'</div>':'<div class="midl">No active job</div>')+'</div>';}).join('')+'</div>';setTimeout(rAD,60000);}
-function aVJ(c){var all=Object.assign({},SAMPLE,S.aj);var j=all[c];if(!j)return;S.v='op';S.pc=c;S.j=j;var ss=ldS(c);if(ss){S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;}else{S.ap=j.ap||null;S.ph=j.ph?{setup:j.ph.setup,running:j.ph.running,qchold:j.ph.qchold,breakdown:j.ph.breakdown}:{setup:0,running:0,qchold:0,breakdown:0};S.gs=j.gs||null;S.te=S.gs?Date.now()/1000-S.gs:0;S.lt=Date.now()/1000;S.done=false;}S.sl=null;if(TI)clearInterval(TI);TI=setInterval(tk,1000);rOP();}
+return '<div class="mc fi d'+(i%4+1)+'" onclick="'+(ir?"aVJ('"+e(mc.j.code)+"')":'')+'">'+'<div class="mca" style="background:'+(ir?pc:'var(--border)')+'"></div>'+'<div style="display:flex;align-items:center;justify-content:space-between"><span class="mn orb" style="color:'+(ir?'var(--text)':'var(--dim)')+'">'+m+'</span><span class="mty">'+mc.ty+'</span></div>'+'<div class="ms" style="color:'+pc+'">'+pl+'</div>'+(ir?'<div class="mie mono">'+e(mc.j.ie)+'</div><div class="mp">'+e(mc.j.part)+' &middot; '+e(mc.j.client)+'</div><div class="mtm mono" style="color:'+pc+'">'+fmt(el)+'</div><div style="font-size:8px;color:var(--muted);margin-top:1px">'+e(mc.j.operator)+'</div>':'<div class="midl">No active job</div>')+'</div>';}).join('')+'</div>';
+// OLD: setTimeout(rAD,60000);
+// NEW:
+if(API_URL){fetch(API_URL+'?action=getAllJobs').then(function(r){return r.json()}).then(function(d){if(d.success&&d.jobs){d.jobs.forEach(function(j){SAMPLE[j.productionCode]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:j.status.toLowerCase()};});}setTimeout(rAD,60000);}).catch(function(){setTimeout(rAD,60000);});}else{setTimeout(rAD,60000);};}
+function aVJ(c){var all=Object.assign({},SAMPLE,S.aj);var j=all[c];if(!j)return;S.v='op';S.pc=c;S.j=j;var ss=ldS(c);if(ss){S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;}else{S.ap=j.ap||null;S.ph=j.ph?{setup:j.ph.setup,running:j.ph.running,qchold:j.ph.qchold,breakdown:j.ph.breakdown}:{setup:0,running:0,qchold:0,breakdown:0};S.gs=j.gs||null;S.te=S.gs?Date.now()/1000-S.gs:0;S.lt=Date.now()/1000;S.done=false;}S.sl=null;
+if(TI)clearInterval(TI);TI=setInterval(tk,1000);
+if(SI)clearInterval(SI);SI=setInterval(aS,SAVE_MS);rOP();}
 function aLO(){S.ae=null;try{localStorage.removeItem('IEA');}catch(x){}rSU();}
 // SUPERVISOR
 function rSU(){var all=Object.assign({},SAMPLE,S.aj);var ent=Object.keys(all);var fh='';
@@ -148,7 +153,29 @@ if(S.sf){fh='<div class="af fi"><div class="fg"><div><label>Prod code</label><in
 $('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">Supervisor</div></div><div style="display:flex;gap:6px;align-items:center"><button class="bb" onclick="oAL()" style="border-color:var(--gold);color:var(--gold);font-size:9px">Admin</button><span class="mono" style="font-size:10px;color:var(--dim)">'+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+'</span></div></div><div class="sw"><div class="sh"><span class="stl">Allocate</span><button class="adb" onclick="tF()">'+(S.sf?'Cancel':'+ New')+'</button></div>'+fh+'<div class="stl" style="margin-bottom:8px">Active jobs</div>'+
 ent.map(function(c,i){var j=all[c];return'<div class="jc fi d'+(Math.min(i+1,4))+'" onclick="oOP(\''+e(c)+'\')"><div class="jct"><span class="jcd orb">'+e(c)+'</span><span class="jcm mono">'+e(j.machine)+'</span></div><div class="jci">'+e(j.ie)+' &mdash; '+e(j.part)+'</div><div class="jcs">'+e(j.client)+' &middot; '+e(j.op)+' &middot; Qty:'+j.qty+' &middot; '+e(j.operator)+'</div></div>';}).join('')+'</div>';}
 function oAL(){var sv=null;try{sv=localStorage.getItem('IEA');}catch(x){}if(sv&&ADMIN_EMAILS.indexOf(sv)>=0){S.ae=sv;rAD();}else rAL();}
-function tF(){S.sf=!S.sf;rSU();}
+function tF(){S.sf=!S.sf;rSU();
+if(S.sf)setTimeout(loadNextCode,100);
+}
+function oIE(){
+  var ie=($('fi2').value||'').trim();
+  if(!ie||!API_URL)return;
+  fetch(API_URL+'?action=getIEDetails&ie='+encodeURIComponent(ie))
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.success){
+        if($('fcl'))$('fcl').value=d.client||'';
+        if($('fp'))$('fp').value=d.part||'';
+        if($('fo'))$('fo').value=d.operator||'';
+      }
+    }).catch(function(){});
+}
+function loadNextCode(){
+  if(!API_URL)return;
+  fetch(API_URL+'?action=getNextCode')
+    .then(function(r){return r.json()})
+    .then(function(d){if(d.success&&$('fc'))$('fc').value=d.nextCode;})
+    .catch(function(){});
+}
 function aJ(){var c=$('fc').value.trim();if(!c)return;S.aj[c]={ie:$('fi2').value.trim(),client:$('fcl').value.trim(),part:$('fp').value.trim()||'Part',qty:parseInt($('fq').value)||1,op:$('fop').value.trim(),machine:$('fm').value,estSetup:parseInt($('fs').value)||180,estCycle:parseInt($('fcy').value)||480,drgLink:'#',operator:$('fo').value.trim()||'Operator',sts:'idle'};S.sf=false;rSU();}
 function oOP(c){var all=Object.assign({},SAMPLE,S.aj);var j=all[c];if(!j)return;S.v='op';S.pc=c;S.j=j;S.sl=null;var ss=ldS(c);if(ss){S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;}else{S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.gs=null;S.lt=null;S.te=0;S.done=false;}if(TI)clearInterval(TI);TI=setInterval(tk,1000);if(SI)clearInterval(SI);SI=setInterval(aS,SAVE_MS);rOP();}
 // OPERATOR
