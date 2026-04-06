@@ -9,544 +9,170 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{
---bg:#08080c;--bg2:#0e0e14;--bg3:#14141e;--border:#1e1e2e;
---text:#e4e2d8;--muted:#6a6878;--dim:#3a384a;
---gold:#ffcc00;--gold-g:rgba(255,204,0,0.15);
---purple:#a855f7;--purple-g:rgba(168,85,247,0.12);
---cyan:#22d3ee;--cyan-g:rgba(34,211,238,0.1);
---green:#34d399;--green-g:rgba(52,211,153,0.1);
---amber:#fbbf24;--amber-g:rgba(251,191,36,0.1);
---red:#f87171;--red-g:rgba(248,113,113,0.1);
---blue:#60a5fa;
-}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#14141e;--border:#1e1e2e;--text:#e4e2d8;--muted:#6a6878;--dim:#3a384a;--gold:#ffcc00;--gold-g:rgba(255,204,0,0.15);--purple:#a855f7;--purple-g:rgba(168,85,247,0.12);--cyan:#22d3ee;--cyan-g:rgba(34,211,238,0.1);--green:#34d399;--green-g:rgba(52,211,153,0.1);--amber:#fbbf24;--amber-g:rgba(251,191,36,0.1);--red:#f87171;--red-g:rgba(248,113,113,0.1);--blue:#60a5fa}
 body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden}
-.mono{font-family:'Share Tech Mono',monospace}
-.orb{font-family:'Orbitron',sans-serif}
-@keyframes glow-pulse{0%,100%{box-shadow:0 0 8px var(--gc),inset 0 0 8px var(--gc)}50%{box-shadow:0 0 24px var(--gc),0 0 48px var(--gc2,transparent),inset 0 0 16px var(--gc)}}
-@keyframes text-glow{0%,100%{text-shadow:0 0 8px var(--gc)}50%{text-shadow:0 0 20px var(--gc),0 0 40px var(--gc)}}
-@keyframes scan{0%{top:-2px}100%{top:100%}}
-@keyframes fade-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.fade-in{animation:fade-in .4s ease-out both}
-.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}.d5{animation-delay:.25s}
-
-.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
-.header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
-.logo{font-size:15px;font-weight:700;letter-spacing:2px;color:var(--gold)}
-.logo span{color:var(--muted);font-weight:400;font-size:12px;letter-spacing:0}
-
-.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:16px 20px;background:var(--bg2);border-bottom:1px solid var(--border)}
-.info-cell{padding:2px 0}
-.info-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px}
-.info-value{font-size:14px;font-weight:600;color:var(--text)}
-.info-value.gold{color:var(--gold)}
-.info-value.cyan{color:var(--cyan)}
-.info-value.purple{color:var(--purple)}
-
-.main-timer-wrap{text-align:center;padding:30px 20px 20px;position:relative}
-.main-timer-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:3px;margin-bottom:8px}
-.main-timer{font-size:68px;font-weight:800;letter-spacing:6px;line-height:1;transition:color .5s;--gc:var(--cyan)}
-.main-timer.overrun{color:var(--red);--gc:var(--red)}
-.main-timer.done{color:var(--green);--gc:var(--green)}
-.main-timer.idle{color:var(--dim)}
-.status-badge{display:inline-block;margin-top:10px;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:1px solid;transition:all .3s}
-
-.phase-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px 20px}
-.phase-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;transition:all .4s;position:relative;overflow:hidden}
-.phase-box.active{--gc:var(--pc);--gc2:var(--pc);animation:glow-pulse 2s ease-in-out infinite}
-.phase-box.active::before{content:'';position:absolute;left:0;width:100%;height:2px;background:var(--pc);animation:scan 1.5s linear infinite;opacity:.6}
-.phase-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;transition:color .3s}
-.phase-box.active .phase-label{color:var(--pc)}
-.phase-time{font-size:24px;font-weight:700;color:var(--dim);transition:color .3s}
-.phase-box.active .phase-time{color:var(--pc);--gc:var(--pc);animation:text-glow 2s ease-in-out infinite}
-
-.eff-wrap{padding:0 20px 20px}
-.eff-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
-.eff-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
-.eff-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
-.eff-value{font-size:28px;font-weight:900;transition:color .5s}
-.eff-bar{background:var(--bg);border-radius:8px;height:10px;overflow:hidden;position:relative}
-.eff-fill{height:100%;border-radius:8px;transition:width 1s ease,background .5s}
-.eff-marks{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:4px}
-
-.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 12px}
-.action-btn{padding:22px 16px;border-radius:14px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:2px;border:2px solid var(--bc,var(--border));background:var(--bg3);color:var(--muted);transition:all .25s;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
-.action-btn:active{transform:scale(.97)}
-.action-btn.active{background:var(--bc);color:#fff;--gc:var(--bc);--gc2:var(--bc);animation:glow-pulse 2s ease-in-out infinite}
-.action-btn:disabled{opacity:.3;cursor:not-allowed;animation:none}
-.end-btn{grid-column:1/-1;padding:20px;border-radius:14px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:3px;border:2px solid var(--red);background:var(--bg3);color:var(--red);transition:all .25s;margin:0 20px 20px;-webkit-tap-highlight-color:transparent}
-.end-btn:active{transform:scale(.97)}
-.end-btn.done{border-color:var(--green);color:var(--green);background:rgba(52,211,153,0.08)}
-.end-btn:disabled{opacity:.25;cursor:not-allowed}
-
-.sheet-log{margin:0 20px 20px;background:var(--bg3);border:1px solid var(--green);border-radius:14px;padding:18px;position:relative;overflow:hidden}
-.sheet-log::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
-.sheet-log h3{font-size:12px;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
-.sheet-table{width:100%;border-collapse:collapse;font-size:11px}
-.sheet-table th{text-align:left;padding:6px;border-bottom:1px solid var(--border);color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-.sheet-table td{padding:8px 6px;color:var(--text)}
-.sheet-table .val-gold{color:var(--gold)}
-.sheet-table .val-purple{color:var(--purple)}
-.sheet-table .val-cyan{color:var(--cyan)}
-.sheet-table .val-amber{color:var(--amber)}
-.sheet-table .val-red{color:var(--red)}
-.sheet-table .val-green{color:var(--green)}
-
-.sup-wrap{padding:20px}
-.sup-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.sup-title{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:2px}
-.add-btn{padding:8px 20px;border-radius:10px;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:#fff;background:var(--purple);letter-spacing:1px;transition:all .2s}
-.add-btn:hover{box-shadow:0 0 20px var(--purple-g)}
-
-.alloc-form{background:var(--bg3);border:1px solid var(--purple);border-radius:14px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden}
-.alloc-form::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--purple),transparent)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
-.form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:18px}
-.form-group label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
-.form-group input,.form-group select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px;font-family:'Share Tech Mono',monospace;transition:border-color .2s}
-.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--purple);box-shadow:0 0 12px var(--purple-g)}
-.submit-btn{width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#fff;background:var(--green);text-transform:uppercase;letter-spacing:2px;transition:all .2s}
-.submit-btn:hover{box-shadow:0 0 24px var(--green-g)}
-
-.job-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:all .2s;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;margin-bottom:8px}
-.job-card:hover{border-color:var(--purple);box-shadow:0 0 20px var(--purple-g)}
-.job-code{font-size:16px;font-weight:900;color:var(--gold);letter-spacing:1px;text-align:center}
-.job-machine{font-size:10px;color:var(--muted);margin-top:2px;text-align:center}
-.job-info-primary{font-size:14px;color:var(--text);font-weight:600}
-.job-info-secondary{font-size:12px;color:var(--muted);margin-top:2px}
-.job-est{text-align:right}
-.job-est div{font-size:12px}
-
-.drg-link{font-size:12px;color:var(--blue);text-decoration:none;border:1px solid rgba(96,165,250,0.3);padding:5px 14px;border-radius:8px;transition:all .2s;display:inline-block;margin-top:8px}
-.drg-link:hover{background:rgba(96,165,250,0.1);box-shadow:0 0 12px rgba(96,165,250,0.2)}
-
-.est-row{display:flex;gap:20px;align-items:center;margin-top:10px}
-.est-item{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.est-item span{font-size:13px;font-weight:600}
-
-.info-box{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:20px}
-.info-box h4{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
-.info-box p{font-size:12px;color:var(--dim);line-height:1.8}
-.info-box .hl{color:var(--blue)}
-
-.back-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Share Tech Mono',monospace;transition:border-color .2s}
-.back-btn:hover{border-color:var(--gold)}
-
-.live-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.mono{font-family:'Share Tech Mono',monospace}.orb{font-family:'Orbitron',sans-serif}
+@keyframes gp{0%,100%{box-shadow:0 0 8px var(--gc),inset 0 0 8px var(--gc)}50%{box-shadow:0 0 24px var(--gc),0 0 48px var(--gc),inset 0 0 16px var(--gc)}}
+@keyframes sc{0%{top:-2px}100%{top:100%}}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fi .35s ease-out both}.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
+.hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.ig{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 10px;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.il{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}.iv{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mtw{text-align:center;padding:18px 16px 12px}
+.mtl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:3px;margin-bottom:5px}
+.mt{font-size:clamp(36px,10vw,54px);font-weight:900;letter-spacing:2px;line-height:1;transition:color .5s}
+.mt.ov{color:var(--red)}.mt.dn{color:var(--green)}.mt.id{color:var(--dim)}
+.sb{display:inline-block;margin-top:7px;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:1px solid}
+.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:0 16px 12px}
+.pb{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 3px;text-align:center;transition:all .4s;position:relative;overflow:hidden}
+.pb.ac{--gc:var(--pc);animation:gp 2s ease-in-out infinite}
+.pb.ac::before{content:'';position:absolute;left:0;width:100%;height:2px;background:var(--pc);animation:sc 1.5s linear infinite;opacity:.6}
+.pl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;transition:color .3s}
+.pb.ac .pl{color:var(--pc)}
+.ptm{font-size:clamp(13px,3.5vw,18px);font-weight:700;color:var(--dim);transition:color .3s}
+.pb.ac .ptm{color:var(--pc)}
+.ew{padding:0 16px 12px}.eb{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px}
+.eh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.el{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.ev{font-size:20px;font-weight:900;transition:color .5s}
+.ebar{background:var(--bg);border-radius:5px;height:7px;overflow:hidden}.efill{height:100%;border-radius:5px;transition:width 1s,background .5s}
+.em{display:flex;justify-content:space-between;font-size:8px;color:var(--dim);margin-top:2px}
+.si{text-align:center;padding:0 16px 8px;font-size:9px;color:var(--dim)}
+.si .dt{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:3px;vertical-align:middle}
+.bg{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 16px 7px}
+.ab{padding:16px 10px;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border:2px solid var(--bc,var(--border));background:var(--bg3);color:var(--muted);transition:all .2s;-webkit-tap-highlight-color:transparent}
+.ab:active{transform:scale(.96)}.ab.ac2{background:var(--bc);color:#fff;--gc:var(--bc);animation:gp 2s ease-in-out infinite}.ab:disabled{opacity:.3;cursor:not-allowed;animation:none}
+.enb{display:block;width:calc(100% - 32px);margin:0 16px 14px;padding:14px;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;border:2px solid var(--red);background:var(--bg3);color:var(--red);-webkit-tap-highlight-color:transparent}
+.enb:active{transform:scale(.97)}.enb.dn{border-color:var(--green);color:var(--green);background:rgba(52,211,153,0.08)}.enb:disabled{opacity:.25;cursor:not-allowed}
+.sl{margin:0 16px 16px;background:var(--bg3);border:1px solid var(--green);border-radius:10px;padding:12px;position:relative;overflow:hidden}
+.sl::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.sl h3{font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.st{width:100%;border-collapse:collapse;font-size:9px}.st th{text-align:left;padding:3px;border-bottom:1px solid var(--border);color:var(--muted);font-size:8px;text-transform:uppercase;white-space:nowrap}.st td{padding:5px 3px}
+.sw{padding:16px}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+.stl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:2px}
+.adb{padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:#fff;background:var(--purple);letter-spacing:1px}
+.af{background:var(--bg3);border:1px solid var(--purple);border-radius:10px;padding:14px;margin-bottom:14px;position:relative;overflow:hidden}
+.af::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.fg label{display:block;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.fg input,.fg select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 8px;border-radius:5px;font-size:11px;font-family:'Share Tech Mono',monospace}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--purple)}
+.subm{width:100%;padding:9px;border-radius:7px;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:#fff;background:var(--green);text-transform:uppercase;letter-spacing:2px}
+.jc{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .2s;margin-bottom:5px}
+.jc:active{border-color:var(--purple)}
+.jct{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.jcd{font-size:13px;font-weight:900;color:var(--gold);letter-spacing:1px}
+.jcm{font-size:9px;color:var(--cyan);border:1px solid rgba(34,211,238,0.3);padding:1px 6px;border-radius:3px}
+.jci{font-size:11px;font-weight:600;margin-bottom:1px}.jcs{font-size:10px;color:var(--muted)}
+.bb{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:5px;cursor:pointer;font-size:10px;font-family:'Share Tech Mono',monospace}
+.er{display:flex;gap:12px;align-items:center;padding:5px 16px 8px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.ei{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}.ei span{font-size:11px;font-weight:600}
+.dl{font-size:10px;color:var(--blue);text-decoration:none;border:1px solid rgba(96,165,250,0.3);padding:3px 8px;border-radius:5px;margin-left:auto}
+.lw{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:20px}
+.lb{background:var(--bg3);border:1px solid var(--gold);border-radius:14px;padding:24px;width:100%;max-width:340px;text-align:center;position:relative;overflow:hidden}
+.lb::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.lb h2{font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:4px}
+.lb p{font-size:11px;color:var(--muted);margin-bottom:16px}
+.lb input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-size:12px;font-family:'Share Tech Mono',monospace;margin-bottom:10px}
+.lb input:focus{outline:none;border-color:var(--gold)}
+.lb button{width:100%;padding:9px;border-radius:7px;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:#000;background:var(--gold);text-transform:uppercase;letter-spacing:2px}
+.le{color:var(--red);font-size:10px;margin-top:6px}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;padding:0 16px 16px}
+.mc{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.mc:active{border-color:var(--purple)}
+.mca{position:absolute;top:0;left:0;right:0;height:3px;border-radius:8px 8px 0 0}
+.mn{font-size:13px;font-weight:900;letter-spacing:1px;margin-bottom:1px}
+.ms{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.mie{font-size:10px;color:var(--gold);margin-bottom:1px}
+.mp{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtm{font-size:15px;font-weight:700;margin-top:4px;letter-spacing:1px}
+.midl{color:var(--dim);font-style:italic;font-size:10px;margin-top:4px}
+.mty{font-size:8px;padding:1px 5px;border-radius:3px;background:var(--bg);color:var(--muted);display:inline-block;margin-left:4px}
+.ssg{display:flex;gap:6px;padding:12px 16px;flex-wrap:wrap}
+.ssc{background:var(--bg3);border-radius:7px;padding:7px 12px;text-align:center;flex:1;min-width:70px}
+.ssv{font-size:18px;font-weight:900}.ssl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 </style>
 </head>
 <body>
-
 <div id="app"></div>
-
 <script>
-// ========== CONFIG ==========
-const API_URL = 'https://script.google.com/macros/s/AKfycbxt-b9vdzRQMMlO871CZd-5nsDrwPR4CALgEQuNhw-fhnFJUhOld8anAL63WNPtAb25/exec'; // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
-const MACHINES = ['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
-
-const SAMPLE_JOBS = {
-  'PRD-0401':{ie:'IE-250529',client:'Skyroot Aerospace',part:'Flat Laminate 3600x2000',qty:2,op:'OP-160',machine:'HMC-1',estSetup:300,estCycle:720,drgLink:'https://drive.google.com/file/d/xxx',operator:'Ravi K.'},
-  'PRD-0402':{ie:'IE-250700',client:'Addverb Technologies',part:'Middle Mast H-11 mtr',qty:1,op:'OP-110',machine:'VMC-5',estSetup:180,estCycle:480,drgLink:'https://drive.google.com/file/d/yyy',operator:'Sunil M.'},
-  'PRD-0403':{ie:'IE-250660',client:'ISRO',part:'Interface Plate',qty:2,op:'OP-80',machine:'VMC-3',estSetup:120,estCycle:360,drgLink:'https://drive.google.com/file/d/zzz',operator:'Amit S.'}
+var API_URL='https://script.google.com/macros/s/AKfycbxt-b9vdzRQMMlO871CZd-5nsDrwPR4CALgEQuNhw-fhnFJUhOld8anAL63WNPtAb25/exec';
+var MACHINES=['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
+var ADMIN_EMAILS=['vicky@inderent.com','chiranjeev@inderent.com','raoinderjeet@yahoo.com','sachin.s@inderent.com'];
+var SAVE_MS=5*60*1000;
+var SAMPLE={
+  'PRD-0401':{ie:'IE-250529',client:'Skyroot Aerospace',part:'Flat Laminate 3600x2000',qty:2,op:'OP-160',machine:'HMC-1',estSetup:300,estCycle:720,drgLink:'#',operator:'Ravi K.',sts:'running',ap:'running',ph:{setup:4500,running:18200,qchold:600,breakdown:0},gs:Date.now()/1000-23300},
+  'PRD-0402':{ie:'IE-250700',client:'Addverb',part:'Middle Mast H-11',qty:1,op:'OP-110',machine:'VMC-5',estSetup:180,estCycle:480,drgLink:'#',operator:'Sunil M.',sts:'running',ap:'setup',ph:{setup:3200,running:0,qchold:0,breakdown:0},gs:Date.now()/1000-3200},
+  'PRD-0403':{ie:'IE-250660',client:'ISRO',part:'Interface Plate',qty:2,op:'OP-80',machine:'VMC-3',estSetup:120,estCycle:360,drgLink:'#',operator:'Amit S.',sts:'idle'}
 };
-
-const COLORS = {
-  setup:{color:'#a855f7',bg:'rgba(168,85,247,0.08)',label:'Setup'},
-  running:{color:'#22d3ee',bg:'rgba(34,211,238,0.08)',label:'Cutting'},
-  qchold:{color:'#fbbf24',bg:'rgba(251,191,36,0.08)',label:'QC hold'},
-  breakdown:{color:'#f87171',bg:'rgba(248,113,113,0.08)',label:'Breakdown'}
-};
-
-// ========== HELPERS ==========
-function fmt(s){s=Math.max(0,Math.floor(s));const h=String(Math.floor(s/3600)).padStart(2,'0'),m=String(Math.floor((s%3600)/60)).padStart(2,'0'),sec=String(s%60).padStart(2,'0');return h+':'+m+':'+sec}
-function fmtHM(min){const h=Math.floor(min/60),m=min%60;return m?h+'h '+m+'m':h+'h'}
-function fmtSec(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return m?h+'h '+m+'m':h+'h'}
-function $(id){return document.getElementById(id)}
-function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
-
-// ========== STATE ==========
-let state = {
-  view:'supervisor', prodCode:null, job:null,
-  activePhase:null, phases:{setup:0,running:0,qchold:0,breakdown:0},
-  globalStart:null, lastTick:null, totalElapsed:0, isDone:false,
-  sheetLog:null, showForm:false, allocatedJobs:{}
-};
-let tickInterval = null;
-
-// ========== TIMER ENGINE ==========
-function tick(){
-  if(!state.globalStart||state.isDone)return;
-  const now=Date.now()/1000;
-  if(state.activePhase&&state.lastTick){
-    state.phases[state.activePhase]+=(now-state.lastTick);
-  }
-  state.totalElapsed=now-state.globalStart;
-  state.lastTick=now;
-  updateTimerDisplay();
-}
-
-function startPhase(phase){
-  if(state.isDone)return;
-  const now=Date.now()/1000;
-  if(state.activePhase&&state.lastTick){
-    state.phases[state.activePhase]+=(now-state.lastTick);
-  }
-  state.activePhase=phase;
-  state.lastTick=now;
-  if(!state.globalStart)state.globalStart=now;
-  updateOperatorUI();
-  // Update status in Sheet
-  if(API_URL){
-    fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'updateStatus',productionCode:state.prodCode,status:'RUNNING'})
-    }).catch(()=>{});
-  }
-}
-
-function endJob(){
-  if(state.isDone||!state.activePhase)return;
-  const now=Date.now()/1000;
-  if(state.activePhase&&state.lastTick){
-    state.phases[state.activePhase]+=(now-state.lastTick);
-  }
-  state.totalElapsed=now-state.globalStart;
-  state.isDone=true;
-  state.activePhase=null;
-  const estTotalSec=(state.job.estSetup+state.job.estCycle)*60;
-  const eff=state.totalElapsed>0?Math.round((estTotalSec/state.totalElapsed)*100):0;
-  state.sheetLog={
-    prodCode:state.prodCode,ie:state.job.ie,machine:state.job.machine,operator:state.job.operator,
-    setup:Math.round(state.phases.setup),cycle:Math.round(state.phases.running),
-    qchold:Math.round(state.phases.qchold),breakdown:Math.round(state.phases.breakdown),
-    total:Math.round(state.totalElapsed),efficiency:eff,
-    estSetupMin:state.job.estSetup,estCycleMin:state.job.estCycle
-  };
-  // Send to Google Sheet
-  if(API_URL){
-    fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({
-        action:'logTime',productionCode:state.prodCode,ieNumber:state.job.ie,
-        machine:state.job.machine,operator:state.job.operator,
-        setupSec:state.sheetLog.setup,cycleSec:state.sheetLog.cycle,
-        qcHoldSec:state.sheetLog.qchold,breakdownSec:state.sheetLog.breakdown,
-        estSetupMin:state.job.estSetup,estCycleMin:state.job.estCycle
-      })
-    }).then(r=>r.json()).then(d=>{
-      if(d.success){state.sheetLog.sent=true;updateOperatorUI();}
-    }).catch(()=>{state.sheetLog.sent=false;state.sheetLog.error=true;updateOperatorUI();});
-  }
-  updateOperatorUI();
-}
-
-// ========== RENDER: SUPERVISOR ==========
-function renderSupervisor(){
-  const allJobs={...SAMPLE_JOBS,...state.allocatedJobs};
-  const entries=Object.entries(allJobs);
-  let formHTML='';
-  if(state.showForm){
-    formHTML=`
-    <div class="alloc-form fade-in">
-      <div class="form-grid">
-        <div class="form-group"><label>Production code</label><input id="f-code" placeholder="PRD-0404" class="mono"></div>
-        <div class="form-group"><label>IE number</label><input id="f-ie" placeholder="IE-250XXX" class="mono"></div>
-        <div class="form-group"><label>Client name</label><input id="f-client" placeholder="Skyroot / ISRO / Addverb"></div>
-        <div class="form-group"><label>Part name</label><input id="f-part" placeholder="Base Plate Mold"></div>
-        <div class="form-group"><label>Operator</label><input id="f-operator" placeholder="Ravi K."></div>
-        <div class="form-group"><label>Qty</label><input id="f-qty" value="1" type="number" min="1"></div>
-      </div>
-      <div class="form-grid-4">
-        <div class="form-group"><label>Machine</label><select id="f-machine">${MACHINES.map(m=>`<option value="${m}">${m}</option>`).join('')}</select></div>
-        <div class="form-group"><label>Operation</label><input id="f-op" value="OP-40" class="mono"></div>
-        <div class="form-group"><label>Est. setup (min)</label><input id="f-setup" value="180" type="number"></div>
-        <div class="form-group"><label>Est. cycle (min)</label><input id="f-cycle" value="480" type="number"></div>
-      </div>
-      <button class="submit-btn" onclick="allocateJob()">Allocate production code</button>
-    </div>`;
-  }
-
-  $('app').innerHTML=`
-  <div class="header">
-    <div>
-      <div class="logo orb">INDER ENTERPRISES</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">Production control &mdash; supervisor dashboard</div>
-    </div>
-    <div class="mono" style="text-align:right;font-size:12px;color:var(--muted)">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}<br>${new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})}</div>
-  </div>
-  <div class="sup-wrap">
-    <div class="sup-header">
-      <span class="sup-title">Allocate new job</span>
-      <button class="add-btn" onclick="toggleForm()">${state.showForm?'Cancel':'+ New production code'}</button>
-    </div>
-    ${formHTML}
-    <div class="sup-title" style="margin-bottom:12px">Active production codes</div>
-    ${entries.map(([code,j],i)=>`
-      <div class="job-card fade-in d${Math.min(i+1,5)}" onclick="openOperator('${esc(code)}')">
-        <div>
-          <div class="job-code orb">${esc(code)}</div>
-          <div class="job-machine mono">${esc(j.machine)}</div>
-        </div>
-        <div>
-          <div class="job-info-primary">${esc(j.ie)} &mdash; ${esc(j.part)}</div>
-          <div class="job-info-secondary">${esc(j.client)} &middot; ${esc(j.op)} &middot; Qty: ${j.qty} &middot; ${esc(j.operator)}</div>
-        </div>
-        <div class="job-est">
-          <div style="color:var(--purple)">Setup: ${fmtHM(j.estSetup)}</div>
-          <div style="color:var(--cyan)">Cycle: ${fmtHM(j.estCycle)}</div>
-        </div>
-      </div>
-    `).join('')}
-    <div class="info-box fade-in d5">
-      <h4>QR code for operators</h4>
-      <p>Each production code generates a QR code URL: <span class="hl mono">yoursite.com/tracker.html?code=PRD-0401</span><br>
-      Operator scans with phone camera, opens the operator dashboard with all job details pre-filled.<br>
-      Print QR stickers and stick on the route card (IE-PD-01).</p>
-    </div>
-    <div class="info-box fade-in d5" style="margin-top:12px">
-      <h4>Google Sheet columns (auto-logged)</h4>
-      <table class="sheet-table"><thead><tr>
-        <th>Prod code</th><th>IE no.</th><th>Machine</th><th>Operator</th><th>Setup</th><th>Cycle</th><th>QC hold</th><th>Breakdown</th><th>Total</th><th>Eff. %</th>
-      </tr></thead><tbody><tr>
-        <td class="val-gold mono">PRD-0401</td><td>IE-250529</td><td>HMC-1</td><td>Ravi K.</td>
-        <td class="val-purple">2h 15m</td><td class="val-cyan">8h 30m</td><td class="val-amber">0h 30m</td><td class="val-red">0h 0m</td><td style="font-weight:700">11h 15m</td><td class="val-green" style="font-weight:700">91%</td>
-      </tr></tbody></table>
-    </div>
-  </div>`;
-}
-
-function toggleForm(){state.showForm=!state.showForm;renderSupervisor();}
-
-function allocateJob(){
-  const code=$('f-code').value.trim(),ie=$('f-ie').value.trim(),client=$('f-client').value.trim();
-  if(!code||!ie||!client){alert('Fill production code, IE number, and client name');return;}
-  state.allocatedJobs[code]={
-    ie,client,part:$('f-part').value.trim()||'Part',qty:parseInt($('f-qty').value)||1,
-    op:$('f-op').value.trim(),machine:$('f-machine').value,
-    estSetup:parseInt($('f-setup').value)||180,estCycle:parseInt($('f-cycle').value)||480,
-    drgLink:'#',operator:$('f-operator').value.trim()||'Operator'
-  };
-  state.showForm=false;
-  renderSupervisor();
-}
-
-function openOperator(code){
-  const allJobs={...SAMPLE_JOBS,...state.allocatedJobs};
-  const job=allJobs[code];
-  if(!job)return;
-  state.view='operator';state.prodCode=code;state.job=job;
-  state.activePhase=null;state.phases={setup:0,running:0,qchold:0,breakdown:0};
-  state.globalStart=null;state.lastTick=null;state.totalElapsed=0;state.isDone=false;state.sheetLog=null;
-  if(tickInterval)clearInterval(tickInterval);
-  tickInterval=setInterval(tick,1000);
-  renderOperator();
-}
-
-// ========== RENDER: OPERATOR ==========
-function renderOperator(){
-  const j=state.job;
-  const estTotalSec=(j.estSetup+j.estCycle)*60;
-  $('app').innerHTML=`
-  <div class="header fade-in">
-    <div style="display:flex;align-items:center;gap:12px">
-      <button class="back-btn" onclick="goBack()">&#8592; Back</button>
-      <span style="font-size:13px;color:var(--muted)">Production code:</span>
-      <span class="orb" style="font-size:16px;color:var(--gold);letter-spacing:2px">${esc(state.prodCode)}</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span class="live-dot" id="live-dot" style="background:var(--dim)"></span>
-      <span id="status-text" style="font-size:12px;color:var(--muted)">Waiting</span>
-    </div>
-  </div>
-
-  <div class="info-grid fade-in d1">
-    <div class="info-cell"><div class="info-label">IE number</div><div class="info-value gold mono">${esc(j.ie)}</div></div>
-    <div class="info-cell"><div class="info-label">Client</div><div class="info-value">${esc(j.client)}</div></div>
-    <div class="info-cell"><div class="info-label">Part</div><div class="info-value">${esc(j.part)}</div></div>
-    <div class="info-cell"><div class="info-label">Machine</div><div class="info-value cyan mono">${esc(j.machine)}</div></div>
-    <div class="info-cell"><div class="info-label">Qty</div><div class="info-value">${j.qty}</div></div>
-    <div class="info-cell"><div class="info-label">Operation</div><div class="info-value purple mono">${esc(j.op)}</div></div>
-  </div>
-
-  <div style="padding:0 20px;background:var(--bg2);border-bottom:1px solid var(--border);padding-bottom:12px" class="fade-in d2">
-    <div class="est-row">
-      <div class="est-item">Est. setup: <span style="color:var(--purple)">${fmtHM(j.estSetup)}</span></div>
-      <div class="est-item">Est. cycle: <span style="color:var(--cyan)">${fmtHM(j.estCycle)}</span></div>
-      <div style="margin-left:auto"><a href="${esc(j.drgLink)}" target="_blank" class="drg-link">View drawing</a></div>
-    </div>
-  </div>
-
-  <div class="main-timer-wrap fade-in d2">
-    <div class="main-timer-label mono">Total elapsed time</div>
-    <div class="main-timer orb idle" id="main-timer">00:00:00</div>
-    <div id="status-badge-wrap"></div>
-  </div>
-
-  <div class="phase-grid fade-in d3">
-    <div class="phase-box" id="pb-setup" style="--pc:var(--purple)">
-      <div class="phase-label">Setup</div>
-      <div class="phase-time mono" id="pt-setup">00:00:00</div>
-    </div>
-    <div class="phase-box" id="pb-running" style="--pc:var(--cyan)">
-      <div class="phase-label">Cycle</div>
-      <div class="phase-time mono" id="pt-running">00:00:00</div>
-    </div>
-    <div class="phase-box" id="pb-qchold" style="--pc:var(--amber)">
-      <div class="phase-label">QC hold</div>
-      <div class="phase-time mono" id="pt-qchold">00:00:00</div>
-    </div>
-    <div class="phase-box" id="pb-breakdown" style="--pc:var(--red)">
-      <div class="phase-label">Breakdown</div>
-      <div class="phase-time mono" id="pt-breakdown">00:00:00</div>
-    </div>
-  </div>
-
-  <div class="eff-wrap fade-in d4">
-    <div class="eff-box">
-      <div class="eff-header">
-        <span class="eff-label mono">Efficiency vs estimate</span>
-        <span class="eff-value orb" id="eff-pct" style="color:var(--dim)">---</span>
-      </div>
-      <div class="eff-bar"><div class="eff-fill" id="eff-fill" style="width:0%"></div></div>
-      <div class="eff-marks mono"><span>0h</span><span id="eff-est">Est: ${fmtHM(j.estSetup+j.estCycle)}</span><span>${fmtHM(Math.round((j.estSetup+j.estCycle)*1.5))}</span></div>
-    </div>
-  </div>
-
-  <div class="btn-grid fade-in d4">
-    <button class="action-btn" id="btn-setup" style="--bc:var(--purple)" onclick="startPhase('setup')">Start setup</button>
-    <button class="action-btn" id="btn-running" style="--bc:var(--cyan)" onclick="startPhase('running')">Start job</button>
-    <button class="action-btn" id="btn-qchold" style="--bc:var(--amber)" onclick="startPhase('qchold')">QC hold</button>
-    <button class="action-btn" id="btn-breakdown" style="--bc:var(--red)" onclick="startPhase('breakdown')">Breakdown</button>
-  </div>
-  <button class="end-btn" id="btn-end" onclick="endJob()" disabled>End job</button>
-
-  <div id="sheet-log-area"></div>`;
-  updateOperatorUI();
-}
-
-function updateTimerDisplay(){
-  const mt=$('main-timer');if(!mt)return;
-  const j=state.job;
-  const estTotalSec=(j.estSetup+j.estCycle)*60;
-  mt.textContent=fmt(state.totalElapsed);
-  mt.className='main-timer orb'+(state.isDone?' done':state.totalElapsed>estTotalSec?' overrun':state.activePhase?'':' idle');
-  ['setup','running','qchold','breakdown'].forEach(p=>{
-    const el=$('pt-'+p);if(el)el.textContent=fmt(state.phases[p]);
-  });
-  // efficiency
-  const eff=state.totalElapsed>0?Math.round((estTotalSec/state.totalElapsed)*100):0;
-  const effEl=$('eff-pct');
-  if(effEl&&state.totalElapsed>0){
-    effEl.textContent=eff+'%';
-    effEl.style.color=eff>=90?'var(--green)':eff>=70?'var(--amber)':'var(--red)';
-  }
-  const fillEl=$('eff-fill');
-  if(fillEl){
-    const pct=Math.min(100,(state.totalElapsed/estTotalSec)*100);
-    fillEl.style.width=pct+'%';
-    fillEl.style.background=eff>=90?'var(--green)':eff>=70?'var(--amber)':'var(--red)';
-  }
-}
-
-function updateOperatorUI(){
-  // phase boxes
-  ['setup','running','qchold','breakdown'].forEach(p=>{
-    const box=$('pb-'+p);if(!box)return;
-    box.className='phase-box'+(state.activePhase===p?' active':'');
-  });
-  // buttons
-  ['setup','running','qchold','breakdown'].forEach(p=>{
-    const btn=$('btn-'+p);if(!btn)return;
-    const active=state.activePhase===p;
-    btn.className='action-btn'+(active?' active':'');
-    btn.disabled=state.isDone;
-    const labels={setup:['Start setup','Setup running...'],running:['Start job','Cutting...'],qchold:['QC hold','QC hold...'],breakdown:['Breakdown','Breakdown...']};
-    btn.textContent=active?labels[p][1]:labels[p][0];
-  });
-  // end button
-  const endBtn=$('btn-end');
-  if(endBtn){
-    endBtn.disabled=state.isDone||!state.activePhase;
-    endBtn.className='end-btn'+(state.isDone?' done':'');
-    endBtn.textContent=state.isDone?'Job completed':'End job';
-  }
-  // status
-  const dot=$('live-dot');
-  const stxt=$('status-text');
-  if(dot&&stxt){
-    if(state.isDone){dot.style.background='var(--green)';stxt.style.color='var(--green)';stxt.textContent='Completed';}
-    else if(state.activePhase){const c=COLORS[state.activePhase];dot.style.background=c.color;stxt.style.color=c.color;stxt.textContent=c.label;}
-    else{dot.style.background='var(--dim)';stxt.style.color='var(--muted)';stxt.textContent='Waiting';}
-  }
-  // status badge
-  const bw=$('status-badge-wrap');
-  if(bw&&state.activePhase&&!state.isDone){
-    const c=COLORS[state.activePhase];
-    bw.innerHTML=`<span class="status-badge" style="color:${c.color};border-color:${c.color};background:${c.bg}">${c.label}</span>`;
-  }else if(bw&&state.isDone){
-    bw.innerHTML=`<span class="status-badge" style="color:var(--green);border-color:var(--green);background:var(--green-g)">Completed</span>`;
-  }else if(bw){bw.innerHTML='';}
-  // timer display
-  updateTimerDisplay();
-  // sheet log
-  if(state.sheetLog){
-    const s=state.sheetLog;
-    const logArea=$('sheet-log-area');
-    if(logArea){
-      logArea.innerHTML=`
-      <div class="sheet-log fade-in">
-        <h3>${s.sent?'Data sent to Google Sheet':'Data ready to send'}</h3>
-        <table class="sheet-table"><thead><tr>
-          <th>IE no.</th><th>Machine</th><th>Operator</th><th>Setup</th><th>Cycle</th><th>QC hold</th><th>Breakdown</th><th>Total</th><th>Efficiency</th>
-        </tr></thead><tbody><tr>
-          <td class="val-gold mono">${esc(s.ie)}</td><td>${esc(s.machine)}</td><td>${esc(s.operator)}</td>
-          <td class="val-purple">${fmtSec(s.setup)}</td><td class="val-cyan">${fmtSec(s.cycle)}</td>
-          <td class="val-amber">${fmtSec(s.qchold)}</td><td class="val-red">${fmtSec(s.breakdown)}</td>
-          <td style="font-weight:700">${fmtSec(s.total)}</td>
-          <td class="${s.efficiency>=90?'val-green':s.efficiency>=70?'val-amber':'val-red'}" style="font-weight:900;font-size:14px">${s.efficiency}%</td>
-        </tr></tbody></table>
-        <p style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.7">
-          Production code <span class="mono val-gold">${esc(s.prodCode)}</span> links this data to IE-PD-10 (First Pass Yield) and MC HR Rate Sheet.
-          ${s.error?'<br><span style="color:var(--red)">WiFi error &mdash; data saved locally. Will retry when connection restores.</span>':''}
-          ${s.sent?'<br><span style="color:var(--green)">Successfully logged to Google Sheet.</span>':''}
-        </p>
-      </div>`;
-    }
-  }
-}
-
-function goBack(){
-  if(tickInterval)clearInterval(tickInterval);
-  state.view='supervisor';state.prodCode=null;state.job=null;
-  state.activePhase=null;state.isDone=false;state.sheetLog=null;
-  renderSupervisor();
-}
-
-// ========== URL PARAM: auto-load job ==========
-function init(){
-  const params=new URLSearchParams(window.location.search);
-  const code=params.get('code');
-  if(code){
-    // Try to fetch from API first
-    if(API_URL){
-      fetch(API_URL+'?action=getJob&code='+encodeURIComponent(code))
-        .then(r=>r.json()).then(d=>{
-          if(d.success&&d.job){
-            const j=d.job;
-            SAMPLE_JOBS[code]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,
-              op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,
-              drgLink:j.drawingLink||'#',operator:j.operator};
-          }
-          openOperator(code);
-        }).catch(()=>openOperator(code));
-    }else if(SAMPLE_JOBS[code]){
-      openOperator(code);
-    }else{
-      renderSupervisor();
-    }
-  }else{
-    renderSupervisor();
-  }
-}
-
+var COL={setup:{c:'#a855f7',b:'rgba(168,85,247,0.08)',l:'Setup'},running:{c:'#22d3ee',b:'rgba(34,211,238,0.08)',l:'Cutting'},qchold:{c:'#fbbf24',b:'rgba(251,191,36,0.08)',l:'QC hold'},breakdown:{c:'#f87171',b:'rgba(248,113,113,0.08)',l:'Breakdown'}};
+function fmt(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function fH(m){var h=Math.floor(m/60),mm=m%60;return mm?h+'h '+mm+'m':h+'h'}
+function $(i){return document.getElementById(i)}
+function e(s){if(s==null)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+var S={v:'sup',pc:null,j:null,ap:null,ph:{setup:0,running:0,qchold:0,breakdown:0},gs:null,lt:null,te:0,done:false,sl:null,sf:false,aj:{},ls:0,ae:null};
+var TI=null,SI=null;
+function savS(){if(!S.pc)return;try{localStorage.setItem('IES_'+S.pc,JSON.stringify({pc:S.pc,j:S.j,ap:S.ap,ph:{setup:S.ph.setup,running:S.ph.running,qchold:S.ph.qchold,breakdown:S.ph.breakdown},gs:S.gs,done:S.done,te:S.te,lt:S.lt}));}catch(x){}}
+function ldS(c){try{var r=localStorage.getItem('IES_'+c);if(!r)return null;var d=JSON.parse(r);if(d.done)return null;if(d.gs&&d.ap&&d.lt){var gap=Date.now()/1000-d.lt;d.ph[d.ap]=(d.ph[d.ap]||0)+gap;d.te=Date.now()/1000-d.gs;d.lt=Date.now()/1000;}return d;}catch(x){return null;}}
+function clS(c){try{localStorage.removeItem('IES_'+c);}catch(x){}}
+function aS(){if(!S.pc||!S.gs||S.done||!API_URL)return;fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'liveUpdate',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,currentPhase:S.ap||'idle',setupSec:Math.round(S.ph.setup),cycleSec:Math.round(S.ph.running),qcHoldSec:Math.round(S.ph.qchold),breakdownSec:Math.round(S.ph.breakdown),totalSec:Math.round(S.te),efficiency:cE(),estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle})}).then(function(){S.ls=Date.now();uSI();}).catch(function(){});savS();}
+function cE(){var es=(S.j.estSetup+S.j.estCycle)*60;return S.te>0?Math.round((es/S.te)*100):0;}
+function uSI(){var el=$('si');if(!el)return;if(!S.gs||S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<30?'var(--green)':a<300?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Saved '+Math.round(a/60)+'m ago':'Waiting...');}
+function tk(){if(!S.gs||S.done)return;var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.te=n-S.gs;S.lt=n;uTD();uSI();}
+function sP(p){if(S.done)return;var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.ap=p;S.lt=n;if(!S.gs)S.gs=n;savS();uOU();if(API_URL)fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'updateStatus',productionCode:S.pc,status:'RUNNING'})}).catch(function(){});}
+function eJ(){if(S.done||!S.ap)return;var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.te=n-S.gs;S.done=true;S.ap=null;var ef=cE();S.sl={pc:S.pc,ie:S.j.ie,mc:S.j.machine,op:S.j.operator,su:Math.round(S.ph.setup),cy:Math.round(S.ph.running),qc:Math.round(S.ph.qchold),bd:Math.round(S.ph.breakdown),to:Math.round(S.te),ef:ef};if(API_URL){fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'logTime',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,setupSec:S.sl.su,cycleSec:S.sl.cy,qcHoldSec:S.sl.qc,breakdownSec:S.sl.bd,estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle})}).then(function(r){return r.json()}).then(function(d){if(d.success){S.sl.ok=true;uOU();}}).catch(function(){S.sl.err=true;uOU();});}clS(S.pc);if(SI)clearInterval(SI);uOU();}
+// ADMIN
+function rAL(){$('app').innerHTML='<div class="hdr"><div class="orb" style="font-size:13px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div></div><div class="lw"><div class="lb fi"><h2 class="orb">Management access</h2><p>Enter your registered email</p><input id="ae" type="email" placeholder="your.email@inderent.com" autofocus><button onclick="cAL()">Login</button><div id="lerr"></div></div></div>';$('ae').onkeydown=function(ev){if(ev.key==='Enter')cAL();};}
+function cAL(){var em=($('ae').value||'').trim().toLowerCase();if(ADMIN_EMAILS.indexOf(em)>=0){S.ae=em;try{localStorage.setItem('IEA',em);}catch(x){}rAD();}else{$('lerr').innerHTML='<div class="le">Access denied. Not in Management list.</div>';}}
+function rAD(){var all=Object.assign({},SAMPLE,S.aj);var mm={};MACHINES.forEach(function(m){mm[m]={n:m,ty:m.charAt(0)==='H'?'HMC':'VMC',s:'idle',j:null};});Object.keys(all).forEach(function(c){var j=all[c];if((j.sts==='running')&&j.machine&&mm[j.machine]){mm[j.machine].s='running';mm[j.machine].j=Object.assign({code:c},j);}});var ru=0;MACHINES.forEach(function(m){if(mm[m].s==='running')ru++;});
+$('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">All machines &mdash; live</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:9px;color:var(--muted)">'+e(S.ae)+'</span><button class="bb" onclick="aLO()">Logout</button></div></div><div class="ssg">'+
+'<div class="ssc"><div class="ssv orb" style="color:var(--cyan)">'+ru+'</div><div class="ssl">Running</div></div>'+
+'<div class="ssc"><div class="ssv orb" style="color:var(--dim)">'+(MACHINES.length-ru)+'</div><div class="ssl">Idle</div></div>'+
+'<div class="ssc"><div class="ssv orb" style="color:var(--gold)">'+MACHINES.length+'</div><div class="ssl">Total</div></div>'+
+'<div class="ssc"><div class="ssv orb" style="color:'+(ru/MACHINES.length>=0.7?'var(--green)':'var(--amber)')+'">'+Math.round(ru/MACHINES.length*100)+'%</div><div class="ssl">Util.</div></div></div>'+
+'<div style="padding:3px 16px 6px"><span class="stl">All machines</span></div><div class="mg">'+
+MACHINES.map(function(m,i){var mc=mm[m];var ir=mc.s==='running'&&mc.j;var pc=ir&&mc.j.ap&&COL[mc.j.ap]?COL[mc.j.ap].c:'var(--dim)';var pl=ir&&mc.j.ap&&COL[mc.j.ap]?COL[mc.j.ap].l:'Idle';var el=ir&&mc.j.gs?Math.round(Date.now()/1000-mc.j.gs):0;
+return '<div class="mc fi d'+(i%4+1)+'" onclick="'+(ir?"aVJ('"+e(mc.j.code)+"')":'')+'">'+'<div class="mca" style="background:'+(ir?pc:'var(--border)')+'"></div>'+'<div style="display:flex;align-items:center;justify-content:space-between"><span class="mn orb" style="color:'+(ir?'var(--text)':'var(--dim)')+'">'+m+'</span><span class="mty">'+mc.ty+'</span></div>'+'<div class="ms" style="color:'+pc+'">'+pl+'</div>'+(ir?'<div class="mie mono">'+e(mc.j.ie)+'</div><div class="mp">'+e(mc.j.part)+' &middot; '+e(mc.j.client)+'</div><div class="mtm mono" style="color:'+pc+'">'+fmt(el)+'</div><div style="font-size:8px;color:var(--muted);margin-top:1px">'+e(mc.j.operator)+'</div>':'<div class="midl">No active job</div>')+'</div>';}).join('')+'</div>';}
+function aVJ(c){var all=Object.assign({},SAMPLE,S.aj);var j=all[c];if(!j)return;S.v='op';S.pc=c;S.j=j;var ss=ldS(c);if(ss){S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;}else{S.ap=j.ap||null;S.ph=j.ph?{setup:j.ph.setup,running:j.ph.running,qchold:j.ph.qchold,breakdown:j.ph.breakdown}:{setup:0,running:0,qchold:0,breakdown:0};S.gs=j.gs||null;S.te=S.gs?Date.now()/1000-S.gs:0;S.lt=Date.now()/1000;S.done=false;}S.sl=null;if(TI)clearInterval(TI);TI=setInterval(tk,1000);rOP();}
+function aLO(){S.ae=null;try{localStorage.removeItem('IEA');}catch(x){}rSU();}
+// SUPERVISOR
+function rSU(){var all=Object.assign({},SAMPLE,S.aj);var ent=Object.keys(all);var fh='';
+if(S.sf){fh='<div class="af fi"><div class="fg"><div><label>Prod code</label><input id="fc" placeholder="PRD-0404" class="mono"></div><div><label>IE number</label><input id="fi2" placeholder="IE-250XXX" class="mono"></div><div><label>Client</label><input id="fcl" placeholder="Skyroot / ISRO"></div><div><label>Part</label><input id="fp" placeholder="Base Plate"></div><div><label>Operator</label><input id="fo" placeholder="Ravi K."></div><div><label>Qty</label><input id="fq" value="1" type="number" min="1"></div><div><label>Machine</label><select id="fm">'+MACHINES.map(function(m){return'<option>'+m+'</option>';}).join('')+'</select></div><div><label>Operation</label><input id="fop" value="OP-40" class="mono"></div><div><label>Setup (min)</label><input id="fs" value="180" type="number"></div><div><label>Cycle (min)</label><input id="fcy" value="480" type="number"></div></div><button class="subm" onclick="aJ()">Allocate</button></div>';}
+$('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">Supervisor</div></div><div style="display:flex;gap:6px;align-items:center"><button class="bb" onclick="oAL()" style="border-color:var(--gold);color:var(--gold);font-size:9px">Admin</button><span class="mono" style="font-size:10px;color:var(--dim)">'+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+'</span></div></div><div class="sw"><div class="sh"><span class="stl">Allocate</span><button class="adb" onclick="tF()">'+(S.sf?'Cancel':'+ New')+'</button></div>'+fh+'<div class="stl" style="margin-bottom:8px">Active jobs</div>'+
+ent.map(function(c,i){var j=all[c];return'<div class="jc fi d'+(Math.min(i+1,4))+'" onclick="oOP(\''+e(c)+'\')"><div class="jct"><span class="jcd orb">'+e(c)+'</span><span class="jcm mono">'+e(j.machine)+'</span></div><div class="jci">'+e(j.ie)+' &mdash; '+e(j.part)+'</div><div class="jcs">'+e(j.client)+' &middot; '+e(j.op)+' &middot; Qty:'+j.qty+' &middot; '+e(j.operator)+'</div></div>';}).join('')+'</div>';}
+function oAL(){var sv=null;try{sv=localStorage.getItem('IEA');}catch(x){}if(sv&&ADMIN_EMAILS.indexOf(sv)>=0){S.ae=sv;rAD();}else rAL();}
+function tF(){S.sf=!S.sf;rSU();}
+function aJ(){var c=$('fc').value.trim();if(!c)return;S.aj[c]={ie:$('fi2').value.trim(),client:$('fcl').value.trim(),part:$('fp').value.trim()||'Part',qty:parseInt($('fq').value)||1,op:$('fop').value.trim(),machine:$('fm').value,estSetup:parseInt($('fs').value)||180,estCycle:parseInt($('fcy').value)||480,drgLink:'#',operator:$('fo').value.trim()||'Operator',sts:'idle'};S.sf=false;rSU();}
+function oOP(c){var all=Object.assign({},SAMPLE,S.aj);var j=all[c];if(!j)return;S.v='op';S.pc=c;S.j=j;S.sl=null;var ss=ldS(c);if(ss){S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;}else{S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.gs=null;S.lt=null;S.te=0;S.done=false;}if(TI)clearInterval(TI);TI=setInterval(tk,1000);if(SI)clearInterval(SI);SI=setInterval(aS,SAVE_MS);rOP();}
+// OPERATOR
+function rOP(){var j=S.j;
+$('app').innerHTML='<div class="hdr fi"><div style="display:flex;align-items:center;gap:6px"><button class="bb" onclick="gB()">&#8592;</button><span style="font-size:10px;color:var(--muted)">Code:</span><span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">'+e(S.pc)+'</span></div><div style="display:flex;align-items:center;gap:5px"><span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span><span id="st" style="font-size:10px;color:var(--muted)">Waiting</span></div></div>'+
+'<div class="ig fi d1"><div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">'+e(j.ie)+'</div></div><div><div class="il">Client</div><div class="iv">'+e(j.client)+'</div></div><div><div class="il">Part</div><div class="iv">'+e(j.part)+'</div></div><div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">'+e(j.machine)+'</div></div><div><div class="il">Qty</div><div class="iv">'+j.qty+'</div></div><div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">'+e(j.op)+'</div></div></div>'+
+'<div class="er fi d1"><div class="ei">Setup: <span style="color:var(--purple)">'+fH(j.estSetup)+'</span></div><div class="ei">Cycle: <span style="color:var(--cyan)">'+fH(j.estCycle)+'</span></div><a href="'+e(j.drgLink)+'" target="_blank" class="dl">Drawing</a></div>'+
+'<div class="mtw fi d2"><div class="mtl mono">Total elapsed</div><div class="mt orb id" id="mt">00:00:00</div><div id="sbw"></div></div>'+
+'<div class="pg fi d3"><div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div><div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div><div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div><div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div></div>'+
+'<div class="ew fi d3"><div class="eb"><div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div><div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div><div class="em mono"><span>0h</span><span>Est: '+fH(j.estSetup+j.estCycle)+'</span><span>'+fH(Math.round((j.estSetup+j.estCycle)*1.5))+'</span></div></div></div>'+
+'<div class="si" id="si"></div>'+
+'<div class="bg fi d4"><button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')">Start setup</button><button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')">Start job</button><button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')">QC hold</button><button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')">Breakdown</button></div>'+
+'<button class="enb" id="be" onclick="eJ()" disabled>End job</button><div id="sla"></div>';uOU();}
+function uTD(){var mt=$('mt');if(!mt)return;var es=(S.j.estSetup+S.j.estCycle)*60;mt.textContent=fmt(S.te);mt.className='mt orb'+(S.done?' dn':S.te>es?' ov':S.ap?'':' id');
+var pk=['setup','running','qchold','breakdown'];pk.forEach(function(p,i){var el=$('pt'+i);if(el)el.textContent=fmt(S.ph[p]);});
+var ef=cE();var ee=$('ep');if(ee&&S.te>0){ee.textContent=ef+'%';ee.style.color=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}
+var fe=$('ef');if(fe){var pc=Math.min(100,(S.te/es)*100);fe.style.width=pc+'%';fe.style.background=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}}
+function uOU(){var pk=['setup','running','qchold','breakdown'];var lb=[['Start setup','Setup...'],['Start job','Cutting...'],['QC hold','QC hold...'],['Breakdown','Brkdown...']];
+pk.forEach(function(p,i){var bx=$('pb'+i);if(bx)bx.className='pb'+(S.ap===p?' ac':'');var bt=$('b'+i);if(bt){bt.className='ab'+(S.ap===p?' ac2':'');bt.disabled=S.done;bt.textContent=S.ap===p?lb[i][1]:lb[i][0];}});
+var eb=$('be');if(eb){eb.disabled=S.done||!S.ap;eb.className='enb'+(S.done?' dn':'');eb.textContent=S.done?'Job completed':'End job';}
+var ld=$('ld'),st=$('st');if(ld&&st){if(S.done){ld.style.background='var(--green)';st.style.color='var(--green)';st.textContent='Done';}else if(S.ap){var c=COL[S.ap];ld.style.background=c.c;st.style.color=c.c;st.textContent=c.l;}else{ld.style.background='var(--dim)';st.style.color='var(--muted)';st.textContent='Waiting';}}
+var bw=$('sbw');if(bw){if(S.ap&&!S.done){var c2=COL[S.ap];bw.innerHTML='<span class="sb" style="color:'+c2.c+';border-color:'+c2.c+';background:'+c2.b+'">'+c2.l+'</span>';}else if(S.done)bw.innerHTML='<span class="sb" style="color:var(--green);border-color:var(--green);background:var(--green-g)">Done</span>';else bw.innerHTML='';}
+uTD();uSI();
+if(S.sl){var s=S.sl,la=$('sla');if(la)la.innerHTML='<div class="sl fi"><h3>'+(s.ok?'Logged to Sheet':'Saving...')+'</h3><table class="st"><thead><tr><th>IE</th><th>Machine</th><th>Setup</th><th>Cycle</th><th>QC</th><th>Brkdn</th><th>Total</th><th>Eff</th></tr></thead><tbody><tr><td class="mono" style="color:var(--gold)">'+e(s.ie)+'</td><td>'+e(s.mc)+'</td><td style="color:var(--purple)">'+fmt(s.su)+'</td><td style="color:var(--cyan)">'+fmt(s.cy)+'</td><td style="color:var(--amber)">'+fmt(s.qc)+'</td><td style="color:var(--red)">'+fmt(s.bd)+'</td><td style="font-weight:700">'+fmt(s.to)+'</td><td style="color:'+(s.ef>=90?'var(--green)':s.ef>=70?'var(--amber)':'var(--red)')+';font-weight:900">'+s.ef+'%</td></tr></tbody></table>'+(s.err?'<p style="font-size:9px;color:var(--red);margin-top:6px">WiFi error. Saved locally.</p>':'')+(s.ok?'<p style="font-size:9px;color:var(--green);margin-top:6px">Successfully logged.</p>':'')+'</div>';}}
+function gB(){if(TI)clearInterval(TI);if(SI)clearInterval(SI);savS();S.v='sup';S.pc=null;S.j=null;S.sl=null;if(S.ae)rAD();else rSU();}
+function init(){var p=new URLSearchParams(window.location.search);var c=p.get('code'),m=p.get('mode');
+if(m==='admin'){oAL();return;}
+if(c){if(API_URL){fetch(API_URL+'?action=getJob&code='+encodeURIComponent(c)).then(function(r){return r.json()}).then(function(d){if(d.success&&d.job){var j=d.job;SAMPLE[c]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:'idle'};}oOP(c);}).catch(function(){if(SAMPLE[c])oOP(c);else rSU();});}else if(SAMPLE[c])oOP(c);else rSU();}else rSU();}
 init();
 </script>
 </body>
