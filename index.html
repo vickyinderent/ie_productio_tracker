@@ -107,7 +107,7 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 var API_URL = 'https://script.google.com/macros/s/AKfycbwQwQmVTclkU1__zxWXMRlXWQLlXJXxjqJYPDbAeAIKccU1ZUOom4No8YrRei4o_RkK/exec';
 var MACHINES = ['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
 var ADMIN_EMAILS = ['vicky@inderent.com','chiranjeev@inderent.com','raoinderjeet@yahoo.com','sachin.s@inderent.com'];
-var SAVE_MS = 5 * 60 * 1000;
+var SAVE_MS = 30 * 1000;
 
 // ============================================================
 // SAMPLE DATA (fallback when sheet is unreachable)
@@ -500,7 +500,7 @@ function rAD() {
   // Schedule next refresh (single timer, no overlap)
   S.adminTimer = setTimeout(function() {
     if (S.ae && S.v !== 'op') rAD();
-  }, 60000);
+  }, 30000);
 }
 
 // Render admin UI without re-fetching (used after data is already refreshed)
@@ -553,7 +553,7 @@ function renderAdminUI() {
   // Schedule next refresh
   S.adminTimer = setTimeout(function() {
     if (S.ae && S.v !== 'op') rAD();
-  }, 60000);
+  }, 30000);
 }
 
 function aVJ(c) {
