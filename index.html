@@ -94,131 +94,964 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 .ssg{display:flex;gap:6px;padding:12px 16px;flex-wrap:wrap}
 .ssc{background:var(--bg3);border-radius:7px;padding:7px 12px;text-align:center;flex:1;min-width:70px}
 .ssv{font-size:18px;font-weight:900}.ssl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--green);color:var(--green);padding:8px 20px;border-radius:8px;font-size:11px;font-weight:600;z-index:999;animation:fi .3s ease-out;pointer-events:none}
+.toast.err{border-color:var(--red);color:var(--red)}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
-var API_URL='https://script.google.com/macros/s/AKfycbwQwQmVTclkU1__zxWXMRlXWQLlXJXxjqJYPDbAeAIKccU1ZUOom4No8YrRei4o_RkK/exec';
-var MACHINES=['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
-var ADMIN_EMAILS=['vicky@inderent.com','chiranjeev@inderent.com','raoinderjeet@yahoo.com','sachin.s@inderent.com'];
-var SAVE_MS=5*60*1000;
-var SAMPLE={
-  'PRD-0401':{ie:'IE-250529',client:'Skyroot Aerospace',part:'Flat Laminate 3600x2000',qty:2,op:'OP-160',machine:'HMC-1',estSetup:300,estCycle:720,drgLink:'#',operator:'Ravi K.',sts:'running',ap:'running',ph:{setup:4500,running:18200,qchold:600,breakdown:0},gs:Date.now()/1000-23300},
-  'PRD-0402':{ie:'IE-250700',client:'Addverb',part:'Middle Mast H-11',qty:1,op:'OP-110',machine:'VMC-5',estSetup:180,estCycle:480,drgLink:'#',operator:'Sunil M.',sts:'running',ap:'setup',ph:{setup:3200,running:0,qchold:0,breakdown:0},gs:Date.now()/1000-3200},
-  'PRD-0403':{ie:'IE-250660',client:'ISRO',part:'Interface Plate',qty:2,op:'OP-80',machine:'VMC-3',estSetup:120,estCycle:360,drgLink:'#',operator:'Amit S.',sts:'idle'}
+// ============================================================
+// CONFIG
+// ============================================================
+var API_URL = 'https://script.google.com/macros/s/AKfycbwQwQmVTclkU1__zxWXMRlXWQLlXJXxjqJYPDbAeAIKccU1ZUOom4No8YrRei4o_RkK/exec';
+var MACHINES = ['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
+var ADMIN_EMAILS = ['vicky@inderent.com','chiranjeev@inderent.com','raoinderjeet@yahoo.com','sachin.s@inderent.com'];
+var SAVE_MS = 5 * 60 * 1000;
+
+// ============================================================
+// SAMPLE DATA (fallback when sheet is unreachable)
+// ============================================================
+var SAMPLE = {
+  'PRD-0401': {ie:'IE-250529',client:'Skyroot Aerospace',part:'Flat Laminate 3600x2000',qty:2,op:'OP-160',machine:'HMC-1',estSetup:300,estCycle:720,drgLink:'#',operator:'Ravi K.',sts:'running',ap:'running',ph:{setup:4500,running:18200,qchold:600,breakdown:0},gs:Date.now()/1000-23300},
+  'PRD-0402': {ie:'IE-250700',client:'Addverb',part:'Middle Mast H-11',qty:1,op:'OP-110',machine:'VMC-5',estSetup:180,estCycle:480,drgLink:'#',operator:'Sunil M.',sts:'running',ap:'setup',ph:{setup:3200,running:0,qchold:0,breakdown:0},gs:Date.now()/1000-3200},
+  'PRD-0403': {ie:'IE-250660',client:'ISRO',part:'Interface Plate',qty:2,op:'OP-80',machine:'VMC-3',estSetup:120,estCycle:360,drgLink:'#',operator:'Amit S.',sts:'idle'}
 };
-var COL={setup:{c:'#a855f7',b:'rgba(168,85,247,0.08)',l:'Setup'},running:{c:'#22d3ee',b:'rgba(34,211,238,0.08)',l:'Cutting'},qchold:{c:'#fbbf24',b:'rgba(251,191,36,0.08)',l:'QC hold'},breakdown:{c:'#f87171',b:'rgba(248,113,113,0.08)',l:'Breakdown'}};
-function fmt(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function fH(m){var h=Math.floor(m/60),mm=m%60;return mm?h+'h '+mm+'m':h+'h'}
-function $(i){return document.getElementById(i)}
-function e(s){if(s==null)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
-var S={v:'sup',pc:null,j:null,ap:null,ph:{setup:0,running:0,qchold:0,breakdown:0},gs:null,lt:null,te:0,done:false,sl:null,sf:false,aj:{},ls:0,ae:null};
-var TI=null,SI=null;
-function savS(){if(!S.pc)return;try{localStorage.setItem('IES_'+S.pc,JSON.stringify({pc:S.pc,j:S.j,ap:S.ap,ph:{setup:S.ph.setup,running:S.ph.running,qchold:S.ph.qchold,breakdown:S.ph.breakdown},gs:S.gs,done:S.done,te:S.te,lt:S.lt}));}catch(x){}}
-function ldS(c){try{var r=localStorage.getItem('IES_'+c);if(!r)return null;var d=JSON.parse(r);if(d.done)return null;if(d.gs&&d.ap&&d.lt){var gap=Date.now()/1000-d.lt;d.ph[d.ap]=(d.ph[d.ap]||0)+gap;d.te=Date.now()/1000-d.gs;d.lt=Date.now()/1000;}return d;}catch(x){return null;}}
-function clS(c){try{localStorage.removeItem('IES_'+c);}catch(x){}}
-function aS(){if(!S.pc||!S.gs||S.done||!API_URL)return;savS();var x=new XMLHttpRequest();x.open('POST',API_URL,true);x.setRequestHeader('Content-Type','text/plain');x.onload=function(){S.ls=Date.now();uSI();};x.onerror=function(){};x.send(JSON.stringify({action:'liveUpdate',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,currentPhase:S.ap||'idle',setupSec:Math.round(S.ph.setup),cycleSec:Math.round(S.ph.running),qcHoldSec:Math.round(S.ph.qchold),breakdownSec:Math.round(S.ph.breakdown),totalSec:Math.round(S.te),efficiency:cE(),estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle}));}
-function cE(){var es=(S.j.estSetup+S.j.estCycle)*60;return S.te>0?Math.round((es/S.te)*100):0;}
-function uSI(){var el=$('si');if(!el)return;if(!S.gs||S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<30?'var(--green)':a<300?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Saved '+Math.round(a/60)+'m ago':'Waiting...');}
-function tk(){if(!S.gs||S.done)return;var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.te=n-S.gs;S.lt=n;uTD();uSI();}
-function sP(p){if(S.done)return;var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.ap=p;S.lt=n;if(!S.gs)S.gs=n;savS();uOU();if(API_URL)fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'updateStatus',productionCode:S.pc,status:'RUNNING'})}).catch(function(){});}
-function eJ(){if(S.done||!S.ap)return;if(!confirm('Are you sure you want to END this job?
 
-Setup: '+fmt(S.ph.setup)+'
-Cycle: '+fmt(S.ph.running)+'
-QC Hold: '+fmt(S.ph.qchold)+'
-Total: '+fmt(S.te)+'
+var COL = {
+  setup:     {c:'#a855f7', b:'rgba(168,85,247,0.08)', l:'Setup'},
+  running:   {c:'#22d3ee', b:'rgba(34,211,238,0.08)', l:'Cutting'},
+  qchold:    {c:'#fbbf24', b:'rgba(251,191,36,0.08)', l:'QC hold'},
+  breakdown: {c:'#f87171', b:'rgba(248,113,113,0.08)', l:'Breakdown'}
+};
 
-This action cannot be undone.'))return;var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.te=n-S.gs;S.done=true;S.ap=null;var ef=cE();S.sl={pc:S.pc,ie:S.j.ie,mc:S.j.machine,op:S.j.operator,su:Math.round(S.ph.setup),cy:Math.round(S.ph.running),qc:Math.round(S.ph.qchold),bd:Math.round(S.ph.breakdown),to:Math.round(S.te),ef:ef};if(API_URL){fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'logTime',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,setupSec:S.sl.su,cycleSec:S.sl.cy,qcHoldSec:S.sl.qc,breakdownSec:S.sl.bd,estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle})}).then(function(r){return r.json()}).then(function(d){if(d.success){S.sl.ok=true;uOU();}}).catch(function(){S.sl.err=true;uOU();});}clS(S.pc);if(SI)clearInterval(SI);uOU();}
-// ADMIN
-function rAL(){$('app').innerHTML='<div class="hdr"><div class="orb" style="font-size:13px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div></div><div class="lw"><div class="lb fi"><h2 class="orb">Management access</h2><p>Enter your registered email</p><input id="ae" type="email" placeholder="your.email@inderent.com" autofocus><button onclick="cAL()">Login</button><div id="lerr"></div></div></div>';$('ae').onkeydown=function(ev){if(ev.key==='Enter')cAL();};}
-function cAL(){var em=($('ae').value||'').trim().toLowerCase();if(ADMIN_EMAILS.indexOf(em)>=0){S.ae=em;try{localStorage.setItem('IEA',em);}catch(x){}rAD();}else{$('lerr').innerHTML='<div class="le">Access denied. Not in Management list.</div>';}}
-function rAD(){var all=Object.assign({},SAMPLE,S.aj);var mm={};MACHINES.forEach(function(m){mm[m]={n:m,ty:m.charAt(0)==='H'?'HMC':'VMC',s:'idle',j:null};});Object.keys(all).forEach(function(c){var j=all[c];if((j.sts==='running')&&j.machine&&mm[j.machine]){mm[j.machine].s='running';mm[j.machine].j=Object.assign({code:c},j);}});var ru=0;MACHINES.forEach(function(m){if(mm[m].s==='running')ru++;});
-$('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">All machines &mdash; live</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:9px;color:var(--muted)">'+e(S.ae)+'</span><button class="bb" onclick="aLO()">Logout</button></div></div><div class="ssg">'+
-'<div class="ssc"><div class="ssv orb" style="color:var(--cyan)">'+ru+'</div><div class="ssl">Running</div></div>'+
-'<div class="ssc"><div class="ssv orb" style="color:var(--dim)">'+(MACHINES.length-ru)+'</div><div class="ssl">Idle</div></div>'+
-'<div class="ssc"><div class="ssv orb" style="color:var(--gold)">'+MACHINES.length+'</div><div class="ssl">Total</div></div>'+
-'<div class="ssc"><div class="ssv orb" style="color:'+(ru/MACHINES.length>=0.7?'var(--green)':'var(--amber)')+'">'+Math.round(ru/MACHINES.length*100)+'%</div><div class="ssl">Util.</div></div></div>'+
-'<div style="padding:3px 16px 6px"><span class="stl">All machines</span></div><div class="mg">'+
-MACHINES.map(function(m,i){var mc=mm[m];var ir=mc.s==='running'&&mc.j;var pc=ir&&mc.j.ap&&COL[mc.j.ap]?COL[mc.j.ap].c:'var(--dim)';var pl=ir&&mc.j.ap&&COL[mc.j.ap]?COL[mc.j.ap].l:'Idle';var el=ir&&mc.j.gs?Math.round(Date.now()/1000-mc.j.gs):0;
-return '<div class="mc fi d'+(i%4+1)+'" onclick="'+(ir?"aVJ('"+e(mc.j.code)+"')":'')+'">'+'<div class="mca" style="background:'+(ir?pc:'var(--border)')+'"></div>'+'<div style="display:flex;align-items:center;justify-content:space-between"><span class="mn orb" style="color:'+(ir?'var(--text)':'var(--dim)')+'">'+m+'</span><span class="mty">'+mc.ty+'</span></div>'+'<div class="ms" style="color:'+pc+'">'+pl+'</div>'+(ir?'<div class="mie mono">'+e(mc.j.ie)+'</div><div class="mp">'+e(mc.j.part)+' &middot; '+e(mc.j.client)+'</div><div class="mtm mono" style="color:'+pc+'">'+fmt(el)+'</div><div style="font-size:8px;color:var(--muted);margin-top:1px">'+e(mc.j.operator)+'</div>':'<div class="midl">No active job</div>')+'</div>';}).join('')+'</div>';
-// OLD: setTimeout(rAD,60000);
-// NEW:
-if(API_URL){fetch(API_URL+'?action=getAllJobs').then(function(r){return r.json()}).then(function(d){if(d.success&&d.jobs){d.jobs.forEach(function(j){SAMPLE[j.productionCode]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:j.status.toLowerCase()};});}setTimeout(rAD,60000);}).catch(function(){setTimeout(rAD,60000);});}else{setTimeout(rAD,60000);};if(S.ae){setTimeout(function(){if(API_URL){fetch(API_URL+'?action=getLiveStatus').then(function(r){return r.json()}).then(function(d){if(d.success&&d.machines){d.machines.forEach(function(m){Object.keys(SAMPLE).forEach(function(c){if(SAMPLE[c].machine===m.machine){SAMPLE[c].ap=m.currentPhase;SAMPLE[c].sts=m.currentPhase==='idle'?'idle':'running';}});});}rAD();}).catch(function(){rAD();});}else{rAD();}},30000);}}
-function aVJ(c){var all=Object.assign({},SAMPLE,S.aj);var j=all[c];if(!j)return;S.v='op';S.pc=c;S.j=j;var ss=ldS(c);if(ss){S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;}else{S.ap=j.ap||null;S.ph=j.ph?{setup:j.ph.setup,running:j.ph.running,qchold:j.ph.qchold,breakdown:j.ph.breakdown}:{setup:0,running:0,qchold:0,breakdown:0};S.gs=j.gs||null;S.te=S.gs?Date.now()/1000-S.gs:0;S.lt=Date.now()/1000;S.done=false;}S.sl=null;
-if(TI)clearInterval(TI);TI=setInterval(tk,1000);
-if(SI)clearInterval(SI);SI=setInterval(aS,SAVE_MS);rOP();}
-function aLO(){S.ae=null;try{localStorage.removeItem('IEA');}catch(x){}rSU();}
-// SUPERVISOR
-function rSU(){var all=Object.assign({},SAMPLE,S.aj);var ent=Object.keys(all);
-// Auto-generate next code
-var maxNum=0;Object.keys(all).forEach(function(c){var m=c.match(/\d+$/);if(m)maxNum=Math.max(maxNum,parseInt(m[0]));});
-// Try from sheet too
-if(API_URL&&!S.nextCode){fetch(API_URL+'?action=getNextCode').then(function(r){return r.json()}).then(function(d){if(d.success)S.nextCode=d.nextCode;}).catch(function(){});}
-var nextCode=S.nextCode||'POD-'+String(maxNum+1).padStart(4,'0');
-// Get operator list
-var opList=S.operators||[];
-var fh='';
-if(S.sf){fh='<div class="af fi"><div class="fg"><div><label>IE number</label><input id="fi2" placeholder="250XXX" class="mono" onchange="lookupIE()"></div><div><label>Prod code (auto)</label><input id="fc" value="'+nextCode+'" class="mono" readonly style="color:var(--gold)"></div><div><label>Client</label><input id="fcl" placeholder="auto from IE" class="mono" readonly style="color:var(--green)"></div><div><label>Part</label><input id="fp" placeholder="auto from IE" readonly style="color:var(--green)"></div><div><label>Operator</label><select id="fo">'+opList.map(function(o){return'<option>'+o+'</option>';}).join('')+'</select></div><div><label>Qty</label><input id="fq" value="1" type="number" min="1"></div><div><label>Machine</label><select id="fm">'+MACHINES.map(function(m){return'<option>'+m+'</option>';}).join('')+'</select></div><div><label>Operation</label><input id="fop" value="OP-40" class="mono"></div><div><label>Setup (min)</label><input id="fs" value="180" type="number"></div><div><label>Cycle (min)</label><input id="fcy" value="480" type="number"></div></div><button class="subm" onclick="aJ()">Allocate</button></div>';}
-$('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">Supervisor</div></div><div style="display:flex;gap:6px;align-items:center"><button class="bb" onclick="oAL()" style="border-color:var(--gold);color:var(--gold);font-size:9px">Admin</button><span class="mono" style="font-size:10px;color:var(--dim)">'+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+'</span></div></div><div class="sw"><div class="sh"><span class="stl">Allocate</span><button class="adb" onclick="tF()">'+(S.sf?'Cancel':'+ New')+'</button></div>'+fh+'<div class="stl" style="margin-bottom:8px">Active jobs</div>'+
-ent.map(function(c,i){var j=all[c];return'<div class="jc fi d'+(Math.min(i+1,4))+'" onclick="oOP(\''+e(c)+'\')"><div class="jct"><span class="jcd orb">'+e(c)+'</span><span class="jcm mono">'+e(j.machine)+'</span></div><div class="jci">'+e(j.ie)+' &mdash; '+e(j.part)+'</div><div class="jcs">'+e(j.client)+' &middot; '+e(j.op)+' &middot; Qty:'+j.qty+' &middot; '+e(j.operator)+'</div></div>';}).join('')+'</div>';
-// Load operators if not loaded
-if(!S.operators&&API_URL){fetch(API_URL+'?action=getOperators').then(function(r){return r.json()}).then(function(d){if(d.success){S.operators=d.operators;if(S.sf)rSU();}}).catch(function(){});}
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function fmt(s) {
+  s = Math.max(0, Math.floor(s));
+  return String(Math.floor(s/3600)).padStart(2,'0') + ':' +
+         String(Math.floor((s%3600)/60)).padStart(2,'0') + ':' +
+         String(s%60).padStart(2,'0');
 }
-function lookupIE(){var ie=$('fi2').value.trim();if(!ie||!API_URL)return;fetch(API_URL+'?action=lookupIE&ie='+encodeURIComponent(ie)).then(function(r){return r.json()}).then(function(d){if(d.success){if($('fcl'))$('fcl').value=d.client||'';if($('fp'))$('fp').value=d.part||'';}}).catch(function(){});}
-function oAL(){var sv=null;try{sv=localStorage.getItem('IEA');}catch(x){}if(sv&&ADMIN_EMAILS.indexOf(sv)>=0){S.ae=sv;rAD();}else rAL();}
-function tF(){S.sf=!S.sf;rSU();
-if(S.sf)setTimeout(loadNextCode,100);
+function fH(m) {
+  var h = Math.floor(m/60), mm = m % 60;
+  return mm ? h+'h '+mm+'m' : h+'h';
 }
-function oIE(){
-  var ie=($('fi2').value||'').trim();
-  if(!ie||!API_URL)return;
-  fetch(API_URL+'?action=getIEDetails&ie='+encodeURIComponent(ie))
-    .then(function(r){return r.json()})
-    .then(function(d){
-      if(d.success){
-        if($('fcl'))$('fcl').value=d.client||'';
-        if($('fp'))$('fp').value=d.part||'';
-        if($('fo'))$('fo').value=d.operator||'';
+function $(i) { return document.getElementById(i); }
+function e(s) {
+  if (s == null) return '';
+  var d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+// Toast notification
+function toast(msg, isErr) {
+  var t = document.createElement('div');
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 3000);
+}
+
+// ============================================================
+// SAFE API HELPERS (handle GAS CORS properly)
+// ============================================================
+function apiGet(params) {
+  var qs = Object.keys(params).map(function(k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  var url = API_URL + '?' + qs;
+  return fetch(url, { method: 'GET', redirect: 'follow' })
+    .then(function(r) { return r.json(); });
+}
+
+function apiPost(data) {
+  return fetch(API_URL, {
+    method: 'POST',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(data)
+  }).then(function(r) { return r.json(); });
+}
+
+// ============================================================
+// STATE
+// ============================================================
+var S = {
+  v: 'sup',        // current view: 'sup' | 'op' | 'admin'
+  pc: null,        // current production code
+  j: null,         // current job object
+  ap: null,        // active phase: 'setup'|'running'|'qchold'|'breakdown'|null
+  ph: {setup:0, running:0, qchold:0, breakdown:0},
+  gs: null,        // global start timestamp
+  lt: null,        // last tick timestamp
+  te: 0,           // total elapsed seconds
+  done: false,
+  sl: null,        // summary log after end
+  sf: false,       // show allocate form
+  aj: {},          // allocated jobs (local)
+  ls: 0,           // last save timestamp
+  ae: null,        // admin email
+  operators: null, // cached operator list
+  nextCode: null,  // cached next code
+  adminTimer: null // admin refresh timer
+};
+
+var TI = null;  // tick interval
+var SI = null;  // auto-save interval
+
+// ============================================================
+// LOCAL STORAGE helpers
+// ============================================================
+function savS() {
+  if (!S.pc) return;
+  try {
+    localStorage.setItem('IES_' + S.pc, JSON.stringify({
+      pc: S.pc, j: S.j, ap: S.ap,
+      ph: {setup:S.ph.setup, running:S.ph.running, qchold:S.ph.qchold, breakdown:S.ph.breakdown},
+      gs: S.gs, done: S.done, te: S.te, lt: S.lt
+    }));
+  } catch(x) {}
+}
+
+function ldS(c) {
+  try {
+    var r = localStorage.getItem('IES_' + c);
+    if (!r) return null;
+    var d = JSON.parse(r);
+    if (d.done) return null;
+    if (d.gs && d.ap && d.lt) {
+      var gap = Date.now()/1000 - d.lt;
+      d.ph[d.ap] = (d.ph[d.ap] || 0) + gap;
+      d.te = Date.now()/1000 - d.gs;
+      d.lt = Date.now()/1000;
+    }
+    return d;
+  } catch(x) { return null; }
+}
+
+function clS(c) {
+  try { localStorage.removeItem('IES_' + c); } catch(x) {}
+}
+
+// ============================================================
+// AUTO-SAVE to Google Sheet
+// ============================================================
+function aS() {
+  if (!S.pc || !S.gs || S.done || !API_URL) return;
+  savS();
+  apiPost({
+    action: 'liveUpdate',
+    productionCode: S.pc,
+    ieNumber: S.j.ie,
+    machine: S.j.machine,
+    operator: S.j.operator,
+    currentPhase: S.ap || 'idle',
+    setupSec: Math.round(S.ph.setup),
+    cycleSec: Math.round(S.ph.running),
+    qcHoldSec: Math.round(S.ph.qchold),
+    breakdownSec: Math.round(S.ph.breakdown),
+    totalSec: Math.round(S.te),
+    efficiency: cE(),
+    estSetupMin: S.j.estSetup,
+    estCycleMin: S.j.estCycle
+  }).then(function() {
+    S.ls = Date.now();
+    uSI();
+  }).catch(function(err) {
+    console.warn('Auto-save failed:', err);
+  });
+}
+
+// ============================================================
+// EFFICIENCY CALC
+// ============================================================
+function cE() {
+  var es = (S.j.estSetup + S.j.estCycle) * 60;
+  return S.te > 0 ? Math.round((es / S.te) * 100) : 0;
+}
+
+// ============================================================
+// SAVE INDICATOR
+// ============================================================
+function uSI() {
+  var el = $('si');
+  if (!el) return;
+  if (!S.gs || S.done) { el.innerHTML = ''; return; }
+  var a = S.ls ? Math.round((Date.now() - S.ls) / 1000) : 999;
+  var c = a < 30 ? 'var(--green)' : a < 300 ? 'var(--amber)' : 'var(--red)';
+  el.innerHTML = '<span class="dt" style="background:'+c+'"></span>' +
+    (S.ls ? 'Saved ' + Math.round(a/60) + 'm ago' : 'Waiting...');
+}
+
+// ============================================================
+// TICK (every second)
+// ============================================================
+function tk() {
+  if (!S.gs || S.done) return;
+  var n = Date.now() / 1000;
+  if (S.ap && S.lt) S.ph[S.ap] += (n - S.lt);
+  S.te = n - S.gs;
+  S.lt = n;
+  uTD();
+  uSI();
+}
+
+// ============================================================
+// SET PHASE
+// ============================================================
+function sP(p) {
+  if (S.done) return;
+  var n = Date.now() / 1000;
+  if (S.ap && S.lt) S.ph[S.ap] += (n - S.lt);
+  S.ap = p;
+  S.lt = n;
+  if (!S.gs) S.gs = n;
+  savS();
+  uOU();
+  // Update status on sheet
+  if (API_URL) {
+    apiPost({ action: 'updateStatus', productionCode: S.pc, status: 'RUNNING' })
+      .catch(function() {});
+  }
+}
+
+// ============================================================
+// END JOB
+// ============================================================
+function eJ() {
+  if (S.done || !S.ap) return;
+  var msg = 'Are you sure you want to END this job?\n\n' +
+    'Setup: ' + fmt(S.ph.setup) + '\n' +
+    'Cycle: ' + fmt(S.ph.running) + '\n' +
+    'QC Hold: ' + fmt(S.ph.qchold) + '\n' +
+    'Total: ' + fmt(S.te) + '\n\n' +
+    'This action cannot be undone.';
+  if (!confirm(msg)) return;
+
+  var n = Date.now() / 1000;
+  if (S.ap && S.lt) S.ph[S.ap] += (n - S.lt);
+  S.te = n - S.gs;
+  S.done = true;
+  S.ap = null;
+  var ef = cE();
+
+  S.sl = {
+    pc: S.pc, ie: S.j.ie, mc: S.j.machine, op: S.j.operator,
+    su: Math.round(S.ph.setup), cy: Math.round(S.ph.running),
+    qc: Math.round(S.ph.qchold), bd: Math.round(S.ph.breakdown),
+    to: Math.round(S.te), ef: ef
+  };
+
+  if (API_URL) {
+    apiPost({
+      action: 'logTime',
+      productionCode: S.pc,
+      ieNumber: S.j.ie,
+      machine: S.j.machine,
+      operator: S.j.operator,
+      setupSec: S.sl.su,
+      cycleSec: S.sl.cy,
+      qcHoldSec: S.sl.qc,
+      breakdownSec: S.sl.bd,
+      estSetupMin: S.j.estSetup,
+      estCycleMin: S.j.estCycle
+    }).then(function(d) {
+      if (d.success) { S.sl.ok = true; uOU(); toast('Job logged successfully!'); }
+    }).catch(function() {
+      S.sl.err = true; uOU(); toast('Save failed - stored locally', true);
+    });
+  }
+
+  clS(S.pc);
+  if (SI) { clearInterval(SI); SI = null; }
+  uOU();
+}
+
+// ============================================================
+// ADMIN LOGIN
+// ============================================================
+function rAL() {
+  $('app').innerHTML =
+    '<div class="hdr"><div class="orb" style="font-size:13px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div></div>' +
+    '<div class="lw"><div class="lb fi">' +
+    '<h2 class="orb">Management access</h2>' +
+    '<p>Enter your registered email</p>' +
+    '<input id="ae" type="email" placeholder="your.email@inderent.com" autofocus>' +
+    '<button onclick="cAL()">Login</button>' +
+    '<div id="lerr"></div>' +
+    '</div></div>';
+  var inp = $('ae');
+  if (inp) inp.onkeydown = function(ev) { if (ev.key === 'Enter') cAL(); };
+}
+
+function cAL() {
+  var em = ($('ae').value || '').trim().toLowerCase();
+  if (ADMIN_EMAILS.indexOf(em) >= 0) {
+    S.ae = em;
+    try { localStorage.setItem('IEA', em); } catch(x) {}
+    rAD();
+  } else {
+    $('lerr').innerHTML = '<div class="le">Access denied. Not in Management list.</div>';
+  }
+}
+
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+function rAD() {
+  // Clear any existing admin refresh timer
+  if (S.adminTimer) { clearTimeout(S.adminTimer); S.adminTimer = null; }
+
+  var all = Object.assign({}, SAMPLE, S.aj);
+  var mm = {};
+  MACHINES.forEach(function(m) {
+    mm[m] = {n:m, ty: m.charAt(0)==='H'?'HMC':'VMC', s:'idle', j:null};
+  });
+
+  Object.keys(all).forEach(function(c) {
+    var j = all[c];
+    if ((j.sts === 'running') && j.machine && mm[j.machine]) {
+      mm[j.machine].s = 'running';
+      mm[j.machine].j = Object.assign({code:c}, j);
+    }
+  });
+
+  var ru = 0;
+  MACHINES.forEach(function(m) { if (mm[m].s === 'running') ru++; });
+
+  $('app').innerHTML =
+    '<div class="hdr">' +
+      '<div>' +
+        '<div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:1px">All machines &mdash; live</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        '<span style="font-size:9px;color:var(--muted)">' + e(S.ae) + '</span>' +
+        '<button class="bb" onclick="aLO()">Logout</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ssg">' +
+      '<div class="ssc"><div class="ssv orb" style="color:var(--cyan)">' + ru + '</div><div class="ssl">Running</div></div>' +
+      '<div class="ssc"><div class="ssv orb" style="color:var(--dim)">' + (MACHINES.length-ru) + '</div><div class="ssl">Idle</div></div>' +
+      '<div class="ssc"><div class="ssv orb" style="color:var(--gold)">' + MACHINES.length + '</div><div class="ssl">Total</div></div>' +
+      '<div class="ssc"><div class="ssv orb" style="color:' + (ru/MACHINES.length>=0.7?'var(--green)':'var(--amber)') + '">' + Math.round(ru/MACHINES.length*100) + '%</div><div class="ssl">Util.</div></div>' +
+    '</div>' +
+    '<div style="padding:3px 16px 6px"><span class="stl">All machines</span></div>' +
+    '<div class="mg">' +
+    MACHINES.map(function(m, i) {
+      var mc = mm[m];
+      var ir = mc.s === 'running' && mc.j;
+      var pc = ir && mc.j.ap && COL[mc.j.ap] ? COL[mc.j.ap].c : 'var(--dim)';
+      var pl = ir && mc.j.ap && COL[mc.j.ap] ? COL[mc.j.ap].l : 'Idle';
+      var el = ir && mc.j.gs ? Math.round(Date.now()/1000 - mc.j.gs) : 0;
+      return '<div class="mc fi d' + (i%4+1) + '" onclick="' + (ir ? "aVJ('" + e(mc.j.code) + "')" : '') + '">' +
+        '<div class="mca" style="background:' + (ir ? pc : 'var(--border)') + '"></div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between">' +
+          '<span class="mn orb" style="color:' + (ir?'var(--text)':'var(--dim)') + '">' + m + '</span>' +
+          '<span class="mty">' + mc.ty + '</span>' +
+        '</div>' +
+        '<div class="ms" style="color:' + pc + '">' + pl + '</div>' +
+        (ir ?
+          '<div class="mie mono">' + e(mc.j.ie) + '</div>' +
+          '<div class="mp">' + e(mc.j.part) + ' &middot; ' + e(mc.j.client) + '</div>' +
+          '<div class="mtm mono" style="color:' + pc + '">' + fmt(el) + '</div>' +
+          '<div style="font-size:8px;color:var(--muted);margin-top:1px">' + e(mc.j.operator) + '</div>'
+        : '<div class="midl">No active job</div>') +
+      '</div>';
+    }).join('') +
+    '</div>';
+
+  // Fetch fresh data from sheet then schedule next refresh
+  if (API_URL) {
+    apiGet({action: 'getAllJobs'}).then(function(d) {
+      if (d.success && d.jobs) {
+        d.jobs.forEach(function(j) {
+          SAMPLE[j.productionCode] = {
+            ie: j.ieNumber, client: j.clientName, part: j.partName,
+            qty: j.qty, op: j.operation, machine: j.machine,
+            estSetup: j.estSetupMin, estCycle: j.estCycleMin,
+            drgLink: j.drawingLink || '#', operator: j.operator,
+            sts: j.status.toLowerCase()
+          };
+        });
       }
-    }).catch(function(){});
+    }).catch(function(err) {
+      console.warn('Failed to fetch jobs:', err);
+    }).finally(function() {
+      // Also fetch live status
+      return apiGet({action: 'getLiveStatus'}).then(function(d) {
+        if (d.success && d.machines) {
+          d.machines.forEach(function(m) {
+            Object.keys(SAMPLE).forEach(function(c) {
+              if (SAMPLE[c].machine === m.machine) {
+                SAMPLE[c].ap = m.currentPhase;
+                SAMPLE[c].sts = (m.currentPhase === 'idle') ? 'idle' : 'running';
+              }
+            });
+          });
+        }
+        // Re-render with fresh data, then schedule next
+        if (S.ae && S.v !== 'op') {
+          renderAdminUI();
+        }
+      }).catch(function() {});
+    });
+  }
+
+  // Schedule next refresh (single timer, no overlap)
+  S.adminTimer = setTimeout(function() {
+    if (S.ae && S.v !== 'op') rAD();
+  }, 60000);
 }
-function loadNextCode(){
-  if(!API_URL)return;
-  fetch(API_URL+'?action=getNextCode')
-    .then(function(r){return r.json()})
-    .then(function(d){if(d.success&&$('fc'))$('fc').value=d.nextCode;})
-    .catch(function(){});
+
+// Render admin UI without re-fetching (used after data is already refreshed)
+function renderAdminUI() {
+  // Just re-call rAD which will use updated SAMPLE
+  // But we need to avoid infinite loop, so only re-render the DOM
+  if (S.adminTimer) { clearTimeout(S.adminTimer); S.adminTimer = null; }
+
+  var all = Object.assign({}, SAMPLE, S.aj);
+  var mm = {};
+  MACHINES.forEach(function(m) {
+    mm[m] = {n:m, ty: m.charAt(0)==='H'?'HMC':'VMC', s:'idle', j:null};
+  });
+  Object.keys(all).forEach(function(c) {
+    var j = all[c];
+    if ((j.sts === 'running') && j.machine && mm[j.machine]) {
+      mm[j.machine].s = 'running';
+      mm[j.machine].j = Object.assign({code:c}, j);
+    }
+  });
+  var ru = 0;
+  MACHINES.forEach(function(m) { if (mm[m].s === 'running') ru++; });
+
+  // Update the machine grid only (avoid full re-render flicker)
+  var mgEl = document.querySelector('.mg');
+  if (mgEl) {
+    mgEl.innerHTML = MACHINES.map(function(m, i) {
+      var mc = mm[m];
+      var ir = mc.s === 'running' && mc.j;
+      var pc = ir && mc.j.ap && COL[mc.j.ap] ? COL[mc.j.ap].c : 'var(--dim)';
+      var pl = ir && mc.j.ap && COL[mc.j.ap] ? COL[mc.j.ap].l : 'Idle';
+      var el = ir && mc.j.gs ? Math.round(Date.now()/1000 - mc.j.gs) : 0;
+      return '<div class="mc fi d' + (i%4+1) + '" onclick="' + (ir ? "aVJ('" + e(mc.j.code) + "')" : '') + '">' +
+        '<div class="mca" style="background:' + (ir ? pc : 'var(--border)') + '"></div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between">' +
+          '<span class="mn orb" style="color:' + (ir?'var(--text)':'var(--dim)') + '">' + m + '</span>' +
+          '<span class="mty">' + mc.ty + '</span>' +
+        '</div>' +
+        '<div class="ms" style="color:' + pc + '">' + pl + '</div>' +
+        (ir ?
+          '<div class="mie mono">' + e(mc.j.ie) + '</div>' +
+          '<div class="mp">' + e(mc.j.part) + ' &middot; ' + e(mc.j.client) + '</div>' +
+          '<div class="mtm mono" style="color:' + pc + '">' + fmt(el) + '</div>' +
+          '<div style="font-size:8px;color:var(--muted);margin-top:1px">' + e(mc.j.operator) + '</div>'
+        : '<div class="midl">No active job</div>') +
+      '</div>';
+    }).join('');
+  }
+
+  // Schedule next refresh
+  S.adminTimer = setTimeout(function() {
+    if (S.ae && S.v !== 'op') rAD();
+  }, 60000);
 }
-function aJ(){var c=$('fc').value.trim();if(!c)return;var jd={ie:$('fi2').value.trim(),client:$('fcl').value.trim(),part:$('fp').value.trim()||'Part',qty:parseInt($('fq').value)||1,op:$('fop').value.trim(),machine:$('fm').value,estSetup:parseInt($('fs').value)||180,estCycle:parseInt($('fcy').value)||480,drgLink:'#',operator:$('fo').value||'Operator',sts:'ALLOCATED'};S.aj[c]=Object.assign({},jd,{sts:'idle'});if(API_URL){fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'allocateJob',productionCode:c,ieNumber:jd.ie,clientName:jd.client,partName:jd.part,machine:jd.machine,operation:jd.op,qty:jd.qty,operator:jd.operator,estSetupMin:jd.estSetup,estCycleMin:jd.estCycle})}).catch(function(){});}S.sf=false;S.nextCode=null;rSU();}
-function oOP(c){var all=Object.assign({},SAMPLE,S.aj);var j=all[c];if(!j)return;S.v='op';S.pc=c;S.j=j;S.sl=null;var ss=ldS(c);if(ss){S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;}else{S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.gs=null;S.lt=null;S.te=0;S.done=false;}if(TI)clearInterval(TI);TI=setInterval(tk,1000);if(SI)clearInterval(SI);SI=setInterval(aS,SAVE_MS);if(SI)clearInterval(SI);SI=setInterval(aS,SAVE_MS);rOP();}
-// OPERATOR
-function rOP(){var j=S.j;
-$('app').innerHTML='<div class="hdr fi"><div style="display:flex;align-items:center;gap:6px"><button class="bb" onclick="gB()">&#8592;</button><span style="font-size:10px;color:var(--muted)">Code:</span><span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">'+e(S.pc)+'</span></div><div style="display:flex;align-items:center;gap:5px"><span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span><span id="st" style="font-size:10px;color:var(--muted)">Waiting</span></div></div>'+
-'<div class="ig fi d1"><div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">'+e(j.ie)+'</div></div><div><div class="il">Client</div><div class="iv">'+e(j.client)+'</div></div><div><div class="il">Part</div><div class="iv">'+e(j.part)+'</div></div><div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">'+e(j.machine)+'</div></div><div><div class="il">Qty</div><div class="iv">'+j.qty+'</div></div><div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">'+e(j.op)+'</div></div></div>'+
-'<div class="er fi d1"><div class="ei">Setup: <span style="color:var(--purple)">'+fH(j.estSetup)+'</span></div><div class="ei">Cycle: <span style="color:var(--cyan)">'+fH(j.estCycle)+'</span></div><a href="'+e(j.drgLink)+'" target="_blank" class="dl">Drawing</a></div>'+
-'<div class="mtw fi d2"><div class="mtl mono">Total elapsed</div><div class="mt orb id" id="mt">00:00:00</div><div id="sbw"></div></div>'+
-'<div class="pg fi d3"><div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div><div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div><div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div><div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div></div>'+
-'<div class="ew fi d3"><div class="eb"><div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div><div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div><div class="em mono"><span>0h</span><span>Est: '+fH(j.estSetup+j.estCycle)+'</span><span>'+fH(Math.round((j.estSetup+j.estCycle)*1.5))+'</span></div></div></div>'+
-'<div class="si" id="si"></div>'+
-'<div class="bg fi d4"><button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')">Start setup</button><button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')">Start job</button><button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')">QC hold</button><button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')">Breakdown</button></div>'+
-'<button class="enb" id="be" onclick="eJ()" disabled>End job</button><div id="sla"></div>';uOU();}
-function uTD(){var mt=$('mt');if(!mt)return;var es=(S.j.estSetup+S.j.estCycle)*60;mt.textContent=fmt(S.te);mt.className='mt orb'+(S.done?' dn':S.te>es?' ov':S.ap?'':' id');
-var pk=['setup','running','qchold','breakdown'];pk.forEach(function(p,i){var el=$('pt'+i);if(el)el.textContent=fmt(S.ph[p]);});
-var ef=cE();var ee=$('ep');if(ee&&S.te>0){ee.textContent=ef+'%';ee.style.color=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}
-var fe=$('ef');if(fe){var pc=Math.min(100,(S.te/es)*100);fe.style.width=pc+'%';fe.style.background=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}}
-function uOU(){var pk=['setup','running','qchold','breakdown'];var lb=[['Start setup','Setup...'],['Start job','Cutting...'],['QC hold','QC hold...'],['Breakdown','Brkdown...']];
-pk.forEach(function(p,i){var bx=$('pb'+i);if(bx)bx.className='pb'+(S.ap===p?' ac':'');var bt=$('b'+i);if(bt){bt.className='ab'+(S.ap===p?' ac2':'');bt.disabled=S.done;bt.textContent=S.ap===p?lb[i][1]:lb[i][0];}});
-var eb=$('be');if(eb){eb.disabled=S.done||!S.ap;eb.className='enb'+(S.done?' dn':'');eb.textContent=S.done?'Job completed':'End job';}
-var ld=$('ld'),st=$('st');if(ld&&st){if(S.done){ld.style.background='var(--green)';st.style.color='var(--green)';st.textContent='Done';}else if(S.ap){var c=COL[S.ap];ld.style.background=c.c;st.style.color=c.c;st.textContent=c.l;}else{ld.style.background='var(--dim)';st.style.color='var(--muted)';st.textContent='Waiting';}}
-var bw=$('sbw');if(bw){if(S.ap&&!S.done){var c2=COL[S.ap];bw.innerHTML='<span class="sb" style="color:'+c2.c+';border-color:'+c2.c+';background:'+c2.b+'">'+c2.l+'</span>';}else if(S.done)bw.innerHTML='<span class="sb" style="color:var(--green);border-color:var(--green);background:var(--green-g)">Done</span>';else bw.innerHTML='';}
-uTD();uSI();
-if(S.sl){var s=S.sl,la=$('sla');if(la)la.innerHTML='<div class="sl fi"><h3>'+(s.ok?'Logged to Sheet':'Saving...')+'</h3><table class="st"><thead><tr><th>IE</th><th>Machine</th><th>Setup</th><th>Cycle</th><th>QC</th><th>Brkdn</th><th>Total</th><th>Eff</th></tr></thead><tbody><tr><td class="mono" style="color:var(--gold)">'+e(s.ie)+'</td><td>'+e(s.mc)+'</td><td style="color:var(--purple)">'+fmt(s.su)+'</td><td style="color:var(--cyan)">'+fmt(s.cy)+'</td><td style="color:var(--amber)">'+fmt(s.qc)+'</td><td style="color:var(--red)">'+fmt(s.bd)+'</td><td style="font-weight:700">'+fmt(s.to)+'</td><td style="color:'+(s.ef>=90?'var(--green)':s.ef>=70?'var(--amber)':'var(--red)')+';font-weight:900">'+s.ef+'%</td></tr></tbody></table>'+(s.err?'<p style="font-size:9px;color:var(--red);margin-top:6px">WiFi error. Saved locally.</p>':'')+(s.ok?'<p style="font-size:9px;color:var(--green);margin-top:6px">Successfully logged.</p>':'')+'</div>';}}
-function gB(){if(TI)clearInterval(TI);if(SI)clearInterval(SI);savS();S.v='sup';S.pc=null;S.j=null;S.sl=null;if(S.ae)rAD();else rSU();}
-function init(){var p=new URLSearchParams(window.location.search);var c=p.get('code'),m=p.get('mode');
-if(m==='admin'){oAL();return;}
-if(c){if(API_URL){fetch(API_URL+'?action=getJob&code='+encodeURIComponent(c)).then(function(r){return r.json()}).then(function(d){if(d.success&&d.job){var j=d.job;SAMPLE[c]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:'idle'};}oOP(c);}).catch(function(){if(SAMPLE[c])oOP(c);else rSU();});}else if(SAMPLE[c])oOP(c);else rSU();}else rSU();}
+
+function aVJ(c) {
+  var all = Object.assign({}, SAMPLE, S.aj);
+  var j = all[c];
+  if (!j) return;
+
+  // Clear admin timer
+  if (S.adminTimer) { clearTimeout(S.adminTimer); S.adminTimer = null; }
+
+  S.v = 'op';
+  S.pc = c;
+  S.j = j;
+  S.sl = null;
+
+  var ss = ldS(c);
+  if (ss) {
+    S.ap = ss.ap;
+    S.ph = {setup:ss.ph.setup, running:ss.ph.running, qchold:ss.ph.qchold, breakdown:ss.ph.breakdown};
+    S.gs = ss.gs;
+    S.te = ss.te;
+    S.lt = ss.lt || Date.now()/1000;
+    S.done = ss.done || false;
+  } else {
+    S.ap = j.ap || null;
+    S.ph = j.ph ? {setup:j.ph.setup, running:j.ph.running, qchold:j.ph.qchold, breakdown:j.ph.breakdown}
+                 : {setup:0, running:0, qchold:0, breakdown:0};
+    S.gs = j.gs || null;
+    S.te = S.gs ? Date.now()/1000 - S.gs : 0;
+    S.lt = Date.now()/1000;
+    S.done = false;
+  }
+
+  if (TI) clearInterval(TI);
+  TI = setInterval(tk, 1000);
+  if (SI) clearInterval(SI);
+  SI = setInterval(aS, SAVE_MS);
+  rOP();
+}
+
+function aLO() {
+  S.ae = null;
+  if (S.adminTimer) { clearTimeout(S.adminTimer); S.adminTimer = null; }
+  try { localStorage.removeItem('IEA'); } catch(x) {}
+  rSU();
+}
+
+// ============================================================
+// SUPERVISOR VIEW
+// ============================================================
+function rSU() {
+  S.v = 'sup';
+  var all = Object.assign({}, SAMPLE, S.aj);
+  var ent = Object.keys(all);
+
+  // Auto-generate next code
+  var maxNum = 0;
+  Object.keys(all).forEach(function(c) {
+    var m = c.match(/\d+$/);
+    if (m) maxNum = Math.max(maxNum, parseInt(m[0]));
+  });
+  var nextCode = S.nextCode || 'POD-' + String(maxNum+1).padStart(4,'0');
+
+  // Get operator list
+  var opList = S.operators || [];
+
+  var fh = '';
+  if (S.sf) {
+    fh = '<div class="af fi">' +
+      '<div class="fg">' +
+        '<div><label>IE number</label><input id="fi2" placeholder="250XXX" class="mono" onchange="doLookupIE()"></div>' +
+        '<div><label>Prod code (auto)</label><input id="fc" value="' + nextCode + '" class="mono" readonly style="color:var(--gold)"></div>' +
+        '<div><label>Client</label><input id="fcl" placeholder="auto from IE" class="mono" readonly style="color:var(--green)"></div>' +
+        '<div><label>Part</label><input id="fp" placeholder="auto from IE" readonly style="color:var(--green)"></div>' +
+        '<div><label>Operator</label><select id="fo"><option value="">Select...</option>' + opList.map(function(o) { return '<option>' + e(o) + '</option>'; }).join('') + '</select></div>' +
+        '<div><label>Qty</label><input id="fq" value="1" type="number" min="1"></div>' +
+        '<div><label>Machine</label><select id="fm">' + MACHINES.map(function(m) { return '<option>' + m + '</option>'; }).join('') + '</select></div>' +
+        '<div><label>Operation</label><input id="fop" value="OP-40" class="mono"></div>' +
+        '<div><label>Setup (min)</label><input id="fs" value="180" type="number"></div>' +
+        '<div><label>Cycle (min)</label><input id="fcy" value="480" type="number"></div>' +
+      '</div>' +
+      '<button class="subm" onclick="aJ()">Allocate</button>' +
+    '</div>';
+  }
+
+  $('app').innerHTML =
+    '<div class="hdr">' +
+      '<div>' +
+        '<div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:1px">Supervisor</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;align-items:center">' +
+        '<button class="bb" onclick="oAL()" style="border-color:var(--gold);color:var(--gold);font-size:9px">Admin</button>' +
+        '<span class="mono" style="font-size:10px;color:var(--dim)">' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="sw">' +
+      '<div class="sh"><span class="stl">Allocate</span><button class="adb" onclick="tF()">' + (S.sf ? 'Cancel' : '+ New') + '</button></div>' +
+      fh +
+      '<div class="stl" style="margin-bottom:8px">Active jobs</div>' +
+      ent.map(function(c, i) {
+        var j = all[c];
+        return '<div class="jc fi d' + (Math.min(i+1,4)) + '" onclick="oOP(\'' + e(c) + '\')">' +
+          '<div class="jct"><span class="jcd orb">' + e(c) + '</span><span class="jcm mono">' + e(j.machine) + '</span></div>' +
+          '<div class="jci">' + e(j.ie) + ' &mdash; ' + e(j.part) + '</div>' +
+          '<div class="jcs">' + e(j.client) + ' &middot; ' + e(j.op) + ' &middot; Qty:' + j.qty + ' &middot; ' + e(j.operator) + '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+
+  // Load operators if not loaded
+  if (!S.operators && API_URL) {
+    apiGet({action: 'getOperators'}).then(function(d) {
+      if (d.success && d.operators) {
+        S.operators = d.operators;
+        if (S.sf) rSU(); // re-render to show operators in dropdown
+      }
+    }).catch(function() {});
+  }
+
+  // Load fresh jobs from sheet
+  if (API_URL) {
+    apiGet({action: 'getAllJobs'}).then(function(d) {
+      if (d.success && d.jobs) {
+        d.jobs.forEach(function(j) {
+          SAMPLE[j.productionCode] = {
+            ie: j.ieNumber, client: j.clientName, part: j.partName,
+            qty: j.qty, op: j.operation, machine: j.machine,
+            estSetup: j.estSetupMin, estCycle: j.estCycleMin,
+            drgLink: j.drawingLink || '#', operator: j.operator,
+            sts: j.status.toLowerCase()
+          };
+        });
+      }
+    }).catch(function() {});
+  }
+}
+
+// IE lookup (renamed to avoid collision with Apps Script function name)
+function doLookupIE() {
+  var ie = $('fi2') ? $('fi2').value.trim() : '';
+  if (!ie || !API_URL) return;
+  apiGet({action: 'lookupIE', ie: ie}).then(function(d) {
+    if (d.success) {
+      if ($('fcl')) $('fcl').value = d.client || '';
+      if ($('fp')) $('fp').value = d.part || '';
+    }
+  }).catch(function() {});
+}
+
+function oAL() {
+  var sv = null;
+  try { sv = localStorage.getItem('IEA'); } catch(x) {}
+  if (sv && ADMIN_EMAILS.indexOf(sv) >= 0) {
+    S.ae = sv;
+    S.v = 'admin';
+    rAD();
+  } else {
+    rAL();
+  }
+}
+
+function tF() {
+  S.sf = !S.sf;
+  rSU();
+  if (S.sf) {
+    setTimeout(function() {
+      if (API_URL) {
+        apiGet({action: 'getNextCode'}).then(function(d) {
+          if (d.success && $('fc')) $('fc').value = d.nextCode;
+        }).catch(function() {});
+      }
+    }, 100);
+  }
+}
+
+function aJ() {
+  var cEl = $('fc');
+  var c = cEl ? cEl.value.trim() : '';
+  if (!c) { toast('Production code is required', true); return; }
+
+  var ie = $('fi2') ? $('fi2').value.trim() : '';
+  if (!ie) { toast('IE number is required', true); return; }
+
+  var jd = {
+    ie: ie,
+    client: $('fcl') ? $('fcl').value.trim() : '',
+    part: $('fp') ? $('fp').value.trim() || 'Part' : 'Part',
+    qty: parseInt($('fq') ? $('fq').value : '1') || 1,
+    op: $('fop') ? $('fop').value.trim() : 'OP-40',
+    machine: $('fm') ? $('fm').value : MACHINES[0],
+    estSetup: parseInt($('fs') ? $('fs').value : '180') || 180,
+    estCycle: parseInt($('fcy') ? $('fcy').value : '480') || 480,
+    drgLink: '#',
+    operator: $('fo') ? $('fo').value || 'Operator' : 'Operator',
+    sts: 'idle'
+  };
+
+  S.aj[c] = jd;
+
+  if (API_URL) {
+    apiPost({
+      action: 'allocateJob',
+      productionCode: c,
+      ieNumber: jd.ie,
+      clientName: jd.client,
+      partName: jd.part,
+      machine: jd.machine,
+      operation: jd.op,
+      qty: jd.qty,
+      operator: jd.operator,
+      estSetupMin: jd.estSetup,
+      estCycleMin: jd.estCycle
+    }).then(function(d) {
+      if (d.success) toast('Job allocated: ' + c);
+    }).catch(function() {
+      toast('Allocation saved locally', true);
+    });
+  }
+
+  S.sf = false;
+  S.nextCode = null;
+  rSU();
+}
+
+// ============================================================
+// OPEN OPERATOR VIEW
+// ============================================================
+function oOP(c) {
+  var all = Object.assign({}, SAMPLE, S.aj);
+  var j = all[c];
+  if (!j) return;
+
+  S.v = 'op';
+  S.pc = c;
+  S.j = j;
+  S.sl = null;
+
+  var ss = ldS(c);
+  if (ss) {
+    S.ap = ss.ap;
+    S.ph = {setup:ss.ph.setup, running:ss.ph.running, qchold:ss.ph.qchold, breakdown:ss.ph.breakdown};
+    S.gs = ss.gs;
+    S.te = ss.te;
+    S.lt = ss.lt || Date.now()/1000;
+    S.done = ss.done || false;
+  } else {
+    S.ap = null;
+    S.ph = {setup:0, running:0, qchold:0, breakdown:0};
+    S.gs = null;
+    S.lt = null;
+    S.te = 0;
+    S.done = false;
+  }
+
+  if (TI) clearInterval(TI);
+  TI = setInterval(tk, 1000);
+  if (SI) clearInterval(SI);
+  SI = setInterval(aS, SAVE_MS);
+  rOP();
+}
+
+// ============================================================
+// OPERATOR VIEW RENDER
+// ============================================================
+function rOP() {
+  var j = S.j;
+  $('app').innerHTML =
+    '<div class="hdr fi">' +
+      '<div style="display:flex;align-items:center;gap:6px">' +
+        '<button class="bb" onclick="gB()">&#8592;</button>' +
+        '<span style="font-size:10px;color:var(--muted)">Code:</span>' +
+        '<span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">' + e(S.pc) + '</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:5px">' +
+        '<span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span>' +
+        '<span id="st" style="font-size:10px;color:var(--muted)">Waiting</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ig fi d1">' +
+      '<div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">' + e(j.ie) + '</div></div>' +
+      '<div><div class="il">Client</div><div class="iv">' + e(j.client) + '</div></div>' +
+      '<div><div class="il">Part</div><div class="iv">' + e(j.part) + '</div></div>' +
+      '<div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">' + e(j.machine) + '</div></div>' +
+      '<div><div class="il">Qty</div><div class="iv">' + j.qty + '</div></div>' +
+      '<div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">' + e(j.op) + '</div></div>' +
+    '</div>' +
+    '<div class="er fi d1">' +
+      '<div class="ei">Setup: <span style="color:var(--purple)">' + fH(j.estSetup) + '</span></div>' +
+      '<div class="ei">Cycle: <span style="color:var(--cyan)">' + fH(j.estCycle) + '</span></div>' +
+      (j.drgLink && j.drgLink !== '#' ? '<a href="' + e(j.drgLink) + '" target="_blank" class="dl">Drawing</a>' : '') +
+    '</div>' +
+    '<div class="mtw fi d2">' +
+      '<div class="mtl mono">Total elapsed</div>' +
+      '<div class="mt orb id" id="mt">00:00:00</div>' +
+      '<div id="sbw"></div>' +
+    '</div>' +
+    '<div class="pg fi d3">' +
+      '<div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div>' +
+      '<div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div>' +
+      '<div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div>' +
+      '<div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div>' +
+    '</div>' +
+    '<div class="ew fi d3">' +
+      '<div class="eb">' +
+        '<div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div>' +
+        '<div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div>' +
+        '<div class="em mono"><span>0h</span><span>Est: ' + fH(j.estSetup+j.estCycle) + '</span><span>' + fH(Math.round((j.estSetup+j.estCycle)*1.5)) + '</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="si" id="si"></div>' +
+    '<div class="bg fi d4">' +
+      '<button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')">Start setup</button>' +
+      '<button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')">Start job</button>' +
+      '<button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')">QC hold</button>' +
+      '<button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')">Breakdown</button>' +
+    '</div>' +
+    '<button class="enb" id="be" onclick="eJ()" disabled>End job</button>' +
+    '<div id="sla"></div>';
+  uOU();
+}
+
+// ============================================================
+// UPDATE TIMER DISPLAY
+// ============================================================
+function uTD() {
+  var mt = $('mt');
+  if (!mt) return;
+  var es = (S.j.estSetup + S.j.estCycle) * 60;
+  mt.textContent = fmt(S.te);
+  mt.className = 'mt orb' + (S.done ? ' dn' : S.te > es ? ' ov' : S.ap ? '' : ' id');
+
+  var pk = ['setup','running','qchold','breakdown'];
+  pk.forEach(function(p, i) {
+    var el = $('pt' + i);
+    if (el) el.textContent = fmt(S.ph[p]);
+  });
+
+  var ef = cE();
+  var ee = $('ep');
+  if (ee && S.te > 0) {
+    ee.textContent = ef + '%';
+    ee.style.color = ef >= 90 ? 'var(--green)' : ef >= 70 ? 'var(--amber)' : 'var(--red)';
+  }
+
+  var fe = $('ef');
+  if (fe) {
+    var pc = Math.min(100, (S.te / es) * 100);
+    fe.style.width = pc + '%';
+    fe.style.background = ef >= 90 ? 'var(--green)' : ef >= 70 ? 'var(--amber)' : 'var(--red)';
+  }
+}
+
+// ============================================================
+// UPDATE OPERATOR UI (buttons, status, summary)
+// ============================================================
+function uOU() {
+  var pk = ['setup','running','qchold','breakdown'];
+  var lb = [['Start setup','Setup...'],['Start job','Cutting...'],['QC hold','QC hold...'],['Breakdown','Brkdown...']];
+
+  pk.forEach(function(p, i) {
+    var bx = $('pb' + i);
+    if (bx) bx.className = 'pb' + (S.ap === p ? ' ac' : '');
+    var bt = $('b' + i);
+    if (bt) {
+      bt.className = 'ab' + (S.ap === p ? ' ac2' : '');
+      bt.disabled = S.done;
+      bt.textContent = S.ap === p ? lb[i][1] : lb[i][0];
+    }
+  });
+
+  var eb = $('be');
+  if (eb) {
+    eb.disabled = S.done || !S.ap;
+    eb.className = 'enb' + (S.done ? ' dn' : '');
+    eb.textContent = S.done ? 'Job completed' : 'End job';
+  }
+
+  var ld = $('ld'), st = $('st');
+  if (ld && st) {
+    if (S.done) {
+      ld.style.background = 'var(--green)';
+      st.style.color = 'var(--green)';
+      st.textContent = 'Done';
+    } else if (S.ap) {
+      var c = COL[S.ap];
+      ld.style.background = c.c;
+      st.style.color = c.c;
+      st.textContent = c.l;
+    } else {
+      ld.style.background = 'var(--dim)';
+      st.style.color = 'var(--muted)';
+      st.textContent = 'Waiting';
+    }
+  }
+
+  var bw = $('sbw');
+  if (bw) {
+    if (S.ap && !S.done) {
+      var c2 = COL[S.ap];
+      bw.innerHTML = '<span class="sb" style="color:'+c2.c+';border-color:'+c2.c+';background:'+c2.b+'">'+c2.l+'</span>';
+    } else if (S.done) {
+      bw.innerHTML = '<span class="sb" style="color:var(--green);border-color:var(--green);background:var(--green-g)">Done</span>';
+    } else {
+      bw.innerHTML = '';
+    }
+  }
+
+  uTD();
+  uSI();
+
+  // Summary log
+  if (S.sl) {
+    var s = S.sl, la = $('sla');
+    if (la) {
+      la.innerHTML =
+        '<div class="sl fi"><h3>' + (s.ok ? 'Logged to Sheet' : 'Saving...') + '</h3>' +
+        '<table class="st"><thead><tr>' +
+          '<th>IE</th><th>Machine</th><th>Setup</th><th>Cycle</th><th>QC</th><th>Brkdn</th><th>Total</th><th>Eff</th>' +
+        '</tr></thead><tbody><tr>' +
+          '<td class="mono" style="color:var(--gold)">' + e(s.ie) + '</td>' +
+          '<td>' + e(s.mc) + '</td>' +
+          '<td style="color:var(--purple)">' + fmt(s.su) + '</td>' +
+          '<td style="color:var(--cyan)">' + fmt(s.cy) + '</td>' +
+          '<td style="color:var(--amber)">' + fmt(s.qc) + '</td>' +
+          '<td style="color:var(--red)">' + fmt(s.bd) + '</td>' +
+          '<td style="font-weight:700">' + fmt(s.to) + '</td>' +
+          '<td style="color:' + (s.ef>=90?'var(--green)':s.ef>=70?'var(--amber)':'var(--red)') + ';font-weight:900">' + s.ef + '%</td>' +
+        '</tr></tbody></table>' +
+        (s.err ? '<p style="font-size:9px;color:var(--red);margin-top:6px">WiFi error. Saved locally.</p>' : '') +
+        (s.ok ? '<p style="font-size:9px;color:var(--green);margin-top:6px">Successfully logged.</p>' : '') +
+        '</div>';
+    }
+  }
+}
+
+// ============================================================
+// GO BACK
+// ============================================================
+function gB() {
+  if (TI) { clearInterval(TI); TI = null; }
+  if (SI) { clearInterval(SI); SI = null; }
+  savS();
+  S.v = 'sup';
+  S.pc = null;
+  S.j = null;
+  S.sl = null;
+  if (S.ae) {
+    S.v = 'admin';
+    rAD();
+  } else {
+    rSU();
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  var p = new URLSearchParams(window.location.search);
+  var c = p.get('code'), m = p.get('mode');
+
+  if (m === 'admin') {
+    oAL();
+    return;
+  }
+
+  if (c) {
+    if (API_URL) {
+      apiGet({action: 'getJob', code: c}).then(function(d) {
+        if (d.success && d.job) {
+          var j = d.job;
+          SAMPLE[c] = {
+            ie: j.ieNumber, client: j.clientName, part: j.partName,
+            qty: j.qty, op: j.operation, machine: j.machine,
+            estSetup: j.estSetupMin, estCycle: j.estCycleMin,
+            drgLink: j.drawingLink || '#', operator: j.operator,
+            sts: 'idle'
+          };
+        }
+        oOP(c);
+      }).catch(function() {
+        if (SAMPLE[c]) oOP(c); else rSU();
+      });
+    } else if (SAMPLE[c]) {
+      oOP(c);
+    } else {
+      rSU();
+    }
+  } else {
+    rSU();
+  }
+}
+
 init();
 </script>
 </body>
