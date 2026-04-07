@@ -607,7 +607,7 @@ function aLO() {
 function rSU() {
   S.v = 'sup';
   var all = Object.assign({}, SAMPLE, S.aj);
-  var ent = Object.keys(all);
+  var ent = Object.keys(all).filter(function(c) {   var j = all[c];   var sts = String(j.sts || '').toLowerCase();   return sts !== 'completed' && sts !== 'complete'; });
 
   // Auto-generate next code
   var maxNum = 0;
