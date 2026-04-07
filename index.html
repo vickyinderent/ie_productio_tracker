@@ -112,11 +112,7 @@ var SAVE_MS = 5 * 60 * 1000;
 // ============================================================
 // SAMPLE DATA (fallback when sheet is unreachable)
 // ============================================================
-var SAMPLE = {
-  'PRD-0401': {ie:'IE-250529',client:'Skyroot Aerospace',part:'Flat Laminate 3600x2000',qty:2,op:'OP-160',machine:'HMC-1',estSetup:300,estCycle:720,drgLink:'#',operator:'Ravi K.',sts:'running',ap:'running',ph:{setup:4500,running:18200,qchold:600,breakdown:0},gs:Date.now()/1000-23300},
-  'PRD-0402': {ie:'IE-250700',client:'Addverb',part:'Middle Mast H-11',qty:1,op:'OP-110',machine:'VMC-5',estSetup:180,estCycle:480,drgLink:'#',operator:'Sunil M.',sts:'running',ap:'setup',ph:{setup:3200,running:0,qchold:0,breakdown:0},gs:Date.now()/1000-3200},
-  'PRD-0403': {ie:'IE-250660',client:'ISRO',part:'Interface Plate',qty:2,op:'OP-80',machine:'VMC-3',estSetup:120,estCycle:360,drgLink:'#',operator:'Amit S.',sts:'idle'}
-};
+var SAMPLE = {};
 
 var COL = {
   setup:     {c:'#a855f7', b:'rgba(168,85,247,0.08)', l:'Setup'},
