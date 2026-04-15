@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#14141e;--border:#1e1e2e;--text:#e4e2d8;--muted:#6a6878;--dim:#3a384a;--gold:#ffcc00;--gold-g:rgba(255,204,0,0.15);--purple:#a855f7;--purple-g:rgba(168,85,247,0.12);--cyan:#22d3ee;--cyan-g:rgba(34,211,238,0.1);--green:#34d399;--green-g:rgba(52,211,153,0.1);--amber:#fbbf24;--amber-g:rgba(251,191,36,0.1);--red:#f87171;--red-g:rgba(248,113,113,0.1);--blue:#60a5fa}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#14141e;--border:#1e1e2e;--text:#e4e2d8;--muted:#6a6878;--dim:#3a384a;--gold:#ffcc00;--gold-g:rgba(255,204,0,.15);--purple:#a855f7;--purple-g:rgba(168,85,247,.12);--cyan:#22d3ee;--cyan-g:rgba(34,211,238,.1);--green:#34d399;--green-g:rgba(52,211,153,.1);--amber:#fbbf24;--amber-g:rgba(251,191,36,.1);--red:#f87171;--red-g:rgba(248,113,113,.1);--blue:#60a5fa}
 body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden}
 .mono{font-family:'Share Tech Mono',monospace}.orb{font-family:'Orbitron',sans-serif}
 @keyframes gp{0%,100%{box-shadow:0 0 8px var(--gc),inset 0 0 8px var(--gc)}50%{box-shadow:0 0 24px var(--gc),0 0 48px var(--gc),inset 0 0 16px var(--gc)}}
@@ -41,7 +41,7 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 .ab{padding:16px 10px;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border:2px solid var(--bc,var(--border));background:var(--bg3);color:var(--muted);transition:all .2s;-webkit-tap-highlight-color:transparent}
 .ab:active{transform:scale(.96)}.ab.ac2{background:var(--bc);color:#fff;--gc:var(--bc);animation:gp 2s ease-in-out infinite}.ab:disabled{opacity:.3;cursor:not-allowed;animation:none}
 .enb{display:block;width:calc(100% - 32px);margin:0 16px 14px;padding:14px;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;border:2px solid var(--red);background:var(--bg3);color:var(--red);-webkit-tap-highlight-color:transparent}
-.enb:active{transform:scale(.97)}.enb.dn{border-color:var(--green);color:var(--green);background:rgba(52,211,153,0.08)}.enb:disabled{opacity:.25;cursor:not-allowed}
+.enb:active{transform:scale(.97)}.enb.dn{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.08)}.enb:disabled{opacity:.25;cursor:not-allowed}
 .sl{margin:0 16px 16px;background:var(--bg3);border:1px solid var(--green);border-radius:10px;padding:12px;position:relative;overflow:hidden}
 .sl::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
 .sl h3{font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
@@ -59,13 +59,13 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 .jc{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .2s;margin-bottom:5px}.jc:active{border-color:var(--purple)}
 .jct{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
 .jcd{font-size:13px;font-weight:900;color:var(--gold);letter-spacing:1px}
-.jcm{font-size:9px;color:var(--cyan);border:1px solid rgba(34,211,238,0.3);padding:1px 6px;border-radius:3px}
+.jcm{font-size:9px;color:var(--cyan);border:1px solid rgba(34,211,238,.3);padding:1px 6px;border-radius:3px}
 .jci{font-size:11px;font-weight:600;margin-bottom:1px}.jcs{font-size:10px;color:var(--muted)}
 .bb{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:5px;cursor:pointer;font-size:10px;font-family:'Share Tech Mono',monospace}
 .nb{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;-webkit-tap-highlight-color:transparent}.nb:active{background:var(--bg3)}
 .er{display:flex;gap:12px;align-items:center;padding:5px 16px 8px;background:var(--bg2);border-bottom:1px solid var(--border)}
 .ei{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}.ei span{font-size:11px;font-weight:600}
-.dl{font-size:10px;color:var(--blue);text-decoration:none;border:1px solid rgba(96,165,250,0.3);padding:3px 8px;border-radius:5px;margin-left:auto}
+.dl{font-size:10px;color:var(--blue);text-decoration:none;border:1px solid rgba(96,165,250,.3);padding:3px 8px;border-radius:5px;margin-left:auto}
 .lw{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:20px}
 .lb{background:var(--bg3);border:1px solid var(--gold);border-radius:14px;padding:24px;width:100%;max-width:340px;text-align:center;position:relative;overflow:hidden}
 .lb::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
@@ -97,12 +97,13 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 var API_URL='https://script.google.com/macros/s/AKfycbxHv6ZrGoZvSITiT_g34i7g-rp-CudhDAoWBcywVFT6os2AHEBiVvKJMzgHxuqqx48-/exec';
 var MACHINES=['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
 var ADMIN_EMAILS=['vicky@inderent.com','chiranjeev@inderent.com','raoinderjeet@yahoo.com','sachin.s@inderent.com'];
-var SAVE_MS=5*60*1000;
+// Push to sheet every 60 seconds (was 5 min — caused stale data)
+var PUSH_MS=60*1000;
 var SAMPLE={},LIVE={},SHEET_LOADED=false;
-var COL={setup:{c:'#a855f7',b:'rgba(168,85,247,0.08)',l:'Setup'},running:{c:'#22d3ee',b:'rgba(34,211,238,0.08)',l:'Cutting'},qchold:{c:'#fbbf24',b:'rgba(251,191,36,0.08)',l:'QC Hold'},breakdown:{c:'#f87171',b:'rgba(248,113,113,0.08)',l:'Breakdown'}};
+var COL={setup:{c:'#a855f7',b:'rgba(168,85,247,.08)',l:'Setup'},running:{c:'#22d3ee',b:'rgba(34,211,238,.08)',l:'Cutting'},qchold:{c:'#fbbf24',b:'rgba(251,191,36,.08)',l:'QC Hold'},breakdown:{c:'#f87171',b:'rgba(248,113,113,.08)',l:'Breakdown'}};
 
 function fmt(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
-function fmtS(s){s=Math.max(0,Math.floor(s));var h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?h+'h'+String(m).padStart(2,'0')+'m':m+'m';}
+function fS(s){s=Math.max(0,Math.floor(s));var h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?h+'h'+String(m).padStart(2,'0')+'m':m+'m';}
 function fH(m){var h=Math.floor(m/60),mm=m%60;return mm?h+'h '+mm+'m':h+'h';}
 function $(i){return document.getElementById(i);}
 function e(s){if(s==null)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
@@ -110,25 +111,26 @@ function toast(msg,er){var t=document.createElement('div');t.className='toast'+(
 function apiGet(p){var q=Object.keys(p).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(p[k]);}).join('&');return fetch(API_URL+'?'+q,{redirect:'follow'}).then(function(r){return r.json();});}
 function apiPost(d){return fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).then(function(r){return r.json();});}
 
-var S={v:'sup',pc:null,j:null,ap:null,ph:{setup:0,running:0,qchold:0,breakdown:0},gs:null,lt:null,te:0,done:false,sl:null,sf:false,aj:{},ls:0,ae:null,operators:null,nextCode:null,adminTimer:null,startTimestamp:null};
+var S={v:'sup',pc:null,j:null,ap:null,ph:{setup:0,running:0,qchold:0,breakdown:0},gs:null,lt:null,te:0,done:false,sl:null,sf:false,aj:{},ls:0,ae:null,operators:null,nextCode:null,adminTimer:null,startTimestamp:null,isAdmin:false};
 var TI=null,SI=null;
 
 function savS(){if(!S.pc)return;try{localStorage.setItem('IES_'+S.pc,JSON.stringify({pc:S.pc,j:S.j,ap:S.ap,ph:S.ph,gs:S.gs,done:S.done,te:S.te,lt:S.lt,startTimestamp:S.startTimestamp}));}catch(x){}}
 function ldS(c){try{var r=localStorage.getItem('IES_'+c);if(!r)return null;var d=JSON.parse(r);if(d.done)return null;if(d.gs&&d.ap&&d.lt){var gap=Date.now()/1000-d.lt;d.ph[d.ap]=(d.ph[d.ap]||0)+gap;d.te=Date.now()/1000-d.gs;d.lt=Date.now()/1000;}return d;}catch(x){return null;}}
 function clS(c){try{localStorage.removeItem('IES_'+c);}catch(x){}}
 
+// Push current timer state to Live Log sheet — called every 60s
 function pushLive(){
   if(!S.pc||!S.gs||S.done||!API_URL)return;
   savS();
   apiPost({action:'liveUpdate',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,currentPhase:S.ap||'idle',setupSec:Math.round(S.ph.setup),cycleSec:Math.round(S.ph.running),qcHoldSec:Math.round(S.ph.qchold),breakdownSec:Math.round(S.ph.breakdown),totalSec:Math.round(S.te),efficiency:cE(),estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle,startTimestamp:S.startTimestamp||''}).then(function(){S.ls=Date.now();uSI();}).catch(function(){});
 }
-function aS(){pushLive();}
 function cE(){var es=(S.j.estSetup+S.j.estCycle)*60;return S.te>0?Math.round((es/S.te)*100):0;}
-function uSI(){var el=$('si');if(!el)return;if(!S.gs||S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<30?'var(--green)':a<300?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Saved '+Math.round(a/60)+'m ago':'Waiting...');}
+function uSI(){var el=$('si');if(!el)return;if(!S.gs||S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<30?'var(--green)':a<60?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Synced '+a+'s ago':'Waiting...');}
 function tk(){if(!S.gs||S.done)return;var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.te=n-S.gs;S.lt=n;uTD();uSI();}
 
+// Operator presses phase button — push immediately
 function sP(p){
-  if(S.done)return;var n=Date.now()/1000;
+  if(S.done||S.isAdmin)return;var n=Date.now()/1000;
   if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);
   S.ap=p;S.lt=n;
   if(!S.gs){S.gs=n;S.startTimestamp=new Date().toISOString();}
@@ -136,84 +138,94 @@ function sP(p){
   if(API_URL)apiPost({action:'updateStatus',productionCode:S.pc,status:'RUNNING'}).catch(function(){});
 }
 
+// End job — push final data, remove from Live Log, clear localStorage
 function eJ(){
   if(S.done||!S.ap)return;
-  if(!confirm('END this job?\n\nSetup: '+fmt(S.ph.setup)+'\nCycle: '+fmt(S.ph.running)+'\nQC Hold: '+fmt(S.ph.qchold)+'\nTotal: '+fmt(S.te)+'\n\nCannot be undone.'))return;
+  if(!confirm('END this job?\n\nSetup: '+fmt(S.ph.setup)+'\nCycle: '+fmt(S.ph.running)+'\nQC Hold: '+fmt(S.ph.qchold)+'\nTotal: '+fmt(S.te)+'\n\nCannot undo.'))return;
   var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.te=n-S.gs;S.done=true;S.ap=null;var ef=cE();
   S.sl={pc:S.pc,ie:S.j.ie,mc:S.j.machine,op:S.j.operator,su:Math.round(S.ph.setup),cy:Math.round(S.ph.running),qc:Math.round(S.ph.qchold),bd:Math.round(S.ph.breakdown),to:Math.round(S.te),ef:ef};
   if(API_URL)apiPost({action:'logTime',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,setupSec:S.sl.su,cycleSec:S.sl.cy,qcHoldSec:S.sl.qc,breakdownSec:S.sl.bd,estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle,startTimestamp:S.startTimestamp||'',endTimestamp:new Date().toISOString()}).then(function(d){if(d.success){S.sl.ok=true;uOU();toast('Job logged!');}}).catch(function(){S.sl.err=true;uOU();toast('Save failed',true);});
   clS(S.pc);if(SI){clearInterval(SI);SI=null;}uOU();
 }
 
-// ---- ADMIN ----
+// ---- ADMIN LOGIN ----
 function rAL(){$('app').innerHTML='<div class="hdr"><div class="orb" style="font-size:13px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div></div><div class="lw"><div class="lb fi"><h2 class="orb">Management access</h2><p>Enter your registered email</p><input id="ae" type="email" placeholder="your.email@inderent.com" autofocus><button onclick="cAL()">Login</button><div id="lerr"></div></div></div>';var inp=$('ae');if(inp)inp.onkeydown=function(ev){if(ev.key==='Enter')cAL();};}
 function cAL(){var em=($('ae').value||'').trim().toLowerCase();if(ADMIN_EMAILS.indexOf(em)>=0){S.ae=em;try{localStorage.setItem('IEA',em);}catch(x){}rAD();}else{$('lerr').innerHTML='<div class="le">Access denied.</div>';}}
 
+// ---- ADMIN DASHBOARD — reads from sheet every 60s, read-only ----
 function rAD(){
   if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}
-  $('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">All machines &mdash; live</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:9px;color:var(--muted)">'+e(S.ae)+'</span><button class="bb" onclick="aLO()">Logout</button></div></div><div class="loader">Loading...</div>';
+  $('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">All machines &mdash; live</div></div><div style="display:flex;align-items:center;gap:8px"><button class="nb" onclick="history.back()">&#8592;</button><button class="nb" onclick="history.forward()">&#8594;</button><span style="font-size:9px;color:var(--muted)">'+e(S.ae)+'</span><button class="bb" onclick="aLO()">Logout</button></div></div><div class="loader">Loading...</div>';
   if(!API_URL){renderAD();return;}
   Promise.all([
     apiGet({action:'getAllJobs'}).catch(function(){return{success:false};}),
     apiGet({action:'getLiveStatus'}).catch(function(){return{success:false};})
   ]).then(function(r){
-    var jd=r[0],ld=r[1];var cc={};
+    var jd=r[0],ld=r[1],cc={};
     if(jd.success&&jd.jobs){SAMPLE={};SHEET_LOADED=true;jd.jobs.forEach(function(j){SAMPLE[j.productionCode]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:j.status.toLowerCase()};});}
     if(jd.success&&jd.completedCodes)jd.completedCodes.forEach(function(c){cc[c]=true;});
-    // Build LIVE map keyed by productionCode — single source of truth
     LIVE={};
     if(ld.success&&ld.machines)ld.machines.forEach(function(m){
-      if(cc[m.productionCode])return;
-      if(m.currentPhase==='completed')return;
+      if(cc[m.productionCode]||m.currentPhase==='completed')return;
       LIVE[m.productionCode]=m;
-      if(SAMPLE[m.productionCode]&&m.currentPhase&&m.currentPhase!=='idle'){
-        SAMPLE[m.productionCode].ap=m.currentPhase;
-        SAMPLE[m.productionCode].sts='running';
-      }
+      if(SAMPLE[m.productionCode]&&m.currentPhase&&m.currentPhase!=='idle'){SAMPLE[m.productionCode].ap=m.currentPhase;SAMPLE[m.productionCode].sts='running';}
     });
     renderAD();
   });
 }
 
 function renderAD(){
-  var all=Object.assign({},SAMPLE,S.aj);var mm={};
+  var all=Object.assign({},SAMPLE,S.aj),mm={};
   MACHINES.forEach(function(m){mm[m]={n:m,ty:m.charAt(0)==='H'?'HMC':'VMC',s:'idle',j:null,lv:null};});
   Object.keys(all).forEach(function(c){var j=all[c];if(j.sts==='running'&&j.machine&&mm[j.machine]){mm[j.machine].s='running';mm[j.machine].j=Object.assign({code:c},j);mm[j.machine].lv=LIVE[c]||null;}});
   var ru=0;MACHINES.forEach(function(m){if(mm[m].s==='running')ru++;});
 
   $('app').innerHTML=
-    '<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">All machines &mdash; live</div></div><div style="display:flex;align-items:center;gap:8px"><button class="nb" onclick="history.back()" title="Back">&#8592;</button><button class="nb" onclick="history.forward()" title="Forward">&#8594;</button><span style="font-size:9px;color:var(--muted)">'+e(S.ae)+'</span><button class="bb" onclick="aLO()">Logout</button></div></div>'+
+    '<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">All machines &mdash; live</div></div><div style="display:flex;align-items:center;gap:8px"><button class="nb" onclick="history.back()">&#8592;</button><button class="nb" onclick="history.forward()">&#8594;</button><span style="font-size:9px;color:var(--muted)">'+e(S.ae)+'</span><button class="bb" onclick="aLO()">Logout</button></div></div>'+
     '<div class="ssg"><div class="ssc"><div class="ssv orb" style="color:var(--cyan)">'+ru+'</div><div class="ssl">Running</div></div><div class="ssc"><div class="ssv orb" style="color:var(--dim)">'+(MACHINES.length-ru)+'</div><div class="ssl">Idle</div></div><div class="ssc"><div class="ssv orb" style="color:var(--gold)">'+MACHINES.length+'</div><div class="ssl">Total</div></div><div class="ssc"><div class="ssv orb" style="color:'+(ru/MACHINES.length>=.7?'var(--green)':'var(--amber)')+'">'+Math.round(ru/MACHINES.length*100)+'%</div><div class="ssl">Util.</div></div></div>'+
     '<div style="padding:3px 16px 6px"><span class="stl">All machines</span></div><div class="mg">'+
     MACHINES.map(function(m,i){
       var mc=mm[m],ir=mc.s==='running'&&mc.j,lv=mc.lv;
-      var phase=ir?mc.j.ap:null;
-      var pc=phase&&COL[phase]?COL[phase].c:'var(--dim)';
-      var pl=phase&&COL[phase]?COL[phase].l:'Idle';
-
-      // Times from LIVE data (single source of truth)
+      var phase=ir?mc.j.ap:null,pc=phase&&COL[phase]?COL[phase].c:'var(--dim)',pl=phase&&COL[phase]?COL[phase].l:'Idle';
+      // All times from Live Log sheet — single source of truth
       var suS=0,cyS=0,qcS=0,bdS=0,elS=0;
-      if(ir&&lv){
-        suS=lv.setupSec||0;cyS=lv.cycleSec||0;qcS=lv.qcHoldSec||0;bdS=lv.breakdownSec||0;
-        elS=lv.totalSec||0;
-        // Add time elapsed since last sheet update
+      if(ir&&lv){suS=lv.setupSec||0;cyS=lv.cycleSec||0;qcS=lv.qcHoldSec||0;bdS=lv.breakdownSec||0;elS=lv.totalSec||0;
+        // Add seconds since last sheet sync
         if(lv.lastUpdated){var lu=new Date(lv.lastUpdated);if(!isNaN(lu.getTime())){var d=Math.floor((Date.now()-lu.getTime())/1000);if(d>0&&d<86400)elS+=d;}}
       }
-
-      var phB=ir?'<div class="phb"><div class="phi"><div class="phi-l" style="color:#a855f7">Setup</div><div class="phi-v mono" style="color:#a855f7">'+fmtS(suS)+'</div></div><div class="phi"><div class="phi-l" style="color:#22d3ee">Cycle</div><div class="phi-v mono" style="color:#22d3ee">'+fmtS(cyS)+'</div></div><div class="phi"><div class="phi-l" style="color:#fbbf24">QC</div><div class="phi-v mono" style="color:#fbbf24">'+fmtS(qcS)+'</div></div><div class="phi"><div class="phi-l" style="color:#f87171">Brkdn</div><div class="phi-v mono" style="color:#f87171">'+fmtS(bdS)+'</div></div></div>':'';
-
+      var phB=ir?'<div class="phb"><div class="phi"><div class="phi-l" style="color:#a855f7">Setup</div><div class="phi-v mono" style="color:#a855f7">'+fS(suS)+'</div></div><div class="phi"><div class="phi-l" style="color:#22d3ee">Cycle</div><div class="phi-v mono" style="color:#22d3ee">'+fS(cyS)+'</div></div><div class="phi"><div class="phi-l" style="color:#fbbf24">QC</div><div class="phi-v mono" style="color:#fbbf24">'+fS(qcS)+'</div></div><div class="phi"><div class="phi-l" style="color:#f87171">Brkdn</div><div class="phi-v mono" style="color:#f87171">'+fS(bdS)+'</div></div></div>':'';
       return'<div class="mc fi d'+(i%4+1)+'" onclick="'+(ir?"aVJ('"+e(mc.j.code)+"')":'')+'">'+'<div class="mca" style="background:'+(ir?pc:'var(--border)')+'"></div><div style="display:flex;align-items:center;justify-content:space-between"><span class="mn orb" style="color:'+(ir?'var(--text)':'var(--dim)')+'">'+m+'</span><span class="mty">'+mc.ty+'</span></div><div class="ms" style="color:'+pc+'">'+pl+'</div>'+(ir?'<div class="mie mono">'+e(mc.j.ie)+'</div><div class="mp">'+e(mc.j.part)+' &middot; '+e(mc.j.client)+'</div><div class="mtm mono" style="color:'+pc+'">'+fmt(elS)+'</div>'+phB+'<div style="font-size:8px;color:var(--muted);margin-top:2px">'+e(mc.j.operator)+'</div>':'<div class="midl">No active job</div>')+'</div>';
     }).join('')+'</div>';
-
+  // Refresh every 60s to match operator push frequency
   S.adminTimer=setTimeout(function(){if(S.ae&&S.v!=='op')rAD();},60000);
 }
 
-function aVJ(c){openJob(c);}
+// Admin opens a machine card — READ-ONLY view, only END button works
+function aVJ(c){
+  var all=Object.assign({},SAMPLE,S.aj),j=all[c];if(!j)return;
+  if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}
+  S.v='op';S.pc=c;S.j=j;S.sl=null;S.isAdmin=true;
+  // Load state from Live Log (sheet data), NOT localStorage
+  var lv=LIVE[c];
+  if(lv){
+    S.ap=lv.currentPhase||null;
+    S.ph={setup:lv.setupSec||0,running:lv.cycleSec||0,qchold:lv.qcHoldSec||0,breakdown:lv.breakdownSec||0};
+    S.te=lv.totalSec||0;
+    S.startTimestamp=lv.startTimestamp||null;
+    // Reconstruct running gs
+    if(S.te>0){S.gs=Date.now()/1000-S.te;S.lt=Date.now()/1000;}else{S.gs=null;S.lt=null;}
+    S.done=false;
+  }else{S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.gs=null;S.lt=null;S.te=0;S.done=false;S.startTimestamp=null;}
+  if(TI)clearInterval(TI);TI=setInterval(tk,1000);
+  // Admin does NOT auto-push — read only
+  if(SI){clearInterval(SI);SI=null;}
+  rOP();
+}
 function aLO(){S.ae=null;if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}try{localStorage.removeItem('IEA');}catch(x){}rSU();}
 
 // ---- SUPERVISOR ----
 function rSU(){
-  S.v='sup';
+  S.v='sup';S.isAdmin=false;
   $('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">Supervisor</div></div><div style="display:flex;gap:6px;align-items:center"><button class="nb" onclick="history.back()">&#8592;</button><button class="nb" onclick="history.forward()">&#8594;</button><button class="bb" onclick="oAL()" style="border-color:var(--gold);color:var(--gold);font-size:9px">Admin</button></div></div><div class="loader">Loading...</div>';
   if(!API_URL){renderSU();return;}
   Promise.all([
@@ -226,8 +238,8 @@ function rSU(){
   });
 }
 function renderSU(){
-  var all=Object.assign({},SAMPLE,S.aj),ent=Object.keys(all);
-  var mx=0;ent.forEach(function(c){var m=c.match(/\d+$/);if(m)mx=Math.max(mx,parseInt(m[0]));});
+  var all=Object.assign({},SAMPLE,S.aj),ent=Object.keys(all),mx=0;
+  ent.forEach(function(c){var m=c.match(/\d+$/);if(m)mx=Math.max(mx,parseInt(m[0]));});
   var nc=S.nextCode||'POD-'+String(mx+1).padStart(4,'0'),ol=S.operators||[],fh='';
   if(S.sf){fh='<div class="af fi"><div class="fg"><div><label>IE number</label><input id="fi2" placeholder="250XXX" class="mono" onchange="doLookupIE()"></div><div><label>Prod code</label><input id="fc" value="'+nc+'" class="mono" readonly style="color:var(--gold)"></div><div><label>Client</label><input id="fcl" placeholder="auto" class="mono" readonly style="color:var(--green)"></div><div><label>Part</label><input id="fp" placeholder="auto" readonly style="color:var(--green)"></div><div><label>Operator</label><select id="fo"><option value="">Select...</option>'+ol.map(function(o){return'<option>'+e(o)+'</option>';}).join('')+'</select></div><div><label>Qty</label><input id="fq" value="1" type="number" min="1"></div><div><label>Machine</label><select id="fm">'+MACHINES.map(function(m){return'<option>'+m+'</option>';}).join('')+'</select></div><div><label>Operation</label><input id="fop" value="OP-40" class="mono"></div><div><label>Setup (min)</label><input id="fs" value="180" type="number"></div><div><label>Cycle (min)</label><input id="fcy" value="480" type="number"></div></div><button class="subm" onclick="aJ()">Allocate</button></div>';}
   $('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">Supervisor</div></div><div style="display:flex;gap:6px;align-items:center"><button class="nb" onclick="history.back()">&#8592;</button><button class="nb" onclick="history.forward()">&#8594;</button><button class="bb" onclick="oAL()" style="border-color:var(--gold);color:var(--gold);font-size:9px">Admin</button></div></div><div class="sw"><div class="sh"><span class="stl">Allocate</span><button class="adb" onclick="tF()">'+(S.sf?'Cancel':'+ New')+'</button></div>'+fh+'<div class="stl" style="margin-bottom:8px">Active jobs ('+ent.length+')</div>'+(ent.length===0?'<div style="text-align:center;padding:20px;color:var(--dim);font-size:11px">'+(SHEET_LOADED?'No active jobs':'Loading...')+'</div>':'')+ent.map(function(c,i){var j=all[c];return'<div class="jc fi d'+(Math.min(i+1,4))+'" onclick="oOP(\''+e(c)+'\')"><div class="jct"><span class="jcd orb">'+e(c)+'</span><span class="jcm mono">'+e(j.machine)+'</span></div><div class="jci">'+e(j.ie)+' &mdash; '+e(j.part)+'</div><div class="jcs">'+e(j.client)+' &middot; '+e(j.op)+' &middot; Qty:'+j.qty+' &middot; '+e(j.operator)+'</div></div>';}).join('')+'</div>';
@@ -237,71 +249,58 @@ function oAL(){var sv=null;try{sv=localStorage.getItem('IEA');}catch(x){}if(sv&&
 function tF(){S.sf=!S.sf;renderSU();if(S.sf)setTimeout(function(){if(API_URL)apiGet({action:'getNextCode'}).then(function(d){if(d.success&&$('fc'))$('fc').value=d.nextCode;}).catch(function(){});},100);}
 function aJ(){var c=$('fc')?$('fc').value.trim():'';if(!c){toast('Code required',1);return;}var ie=$('fi2')?$('fi2').value.trim():'';if(!ie){toast('IE required',1);return;}var jd={ie:ie,client:$('fcl')?$('fcl').value.trim():'',part:$('fp')?$('fp').value.trim()||'Part':'Part',qty:parseInt($('fq')?$('fq').value:'1')||1,op:$('fop')?$('fop').value.trim():'OP-40',machine:$('fm')?$('fm').value:MACHINES[0],estSetup:parseInt($('fs')?$('fs').value:'180')||180,estCycle:parseInt($('fcy')?$('fcy').value:'480')||480,drgLink:'#',operator:$('fo')?$('fo').value||'Operator':'Operator',sts:'idle'};S.aj[c]=jd;if(API_URL)apiPost({action:'allocateJob',productionCode:c,ieNumber:jd.ie,clientName:jd.client,partName:jd.part,machine:jd.machine,operation:jd.op,qty:jd.qty,operator:jd.operator,estSetupMin:jd.estSetup,estCycleMin:jd.estCycle}).then(function(d){if(d.success)toast('Allocated: '+c);}).catch(function(){toast('Saved locally',1);});S.sf=false;S.nextCode=null;rSU();}
 
-// ---- OPEN JOB (shared by supervisor + admin) ----
-function openJob(c){
-  var all=Object.assign({},SAMPLE,S.aj);var j=all[c];if(!j)return;
-  if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}
-  S.v='op';S.pc=c;S.j=j;S.sl=null;
-
-  // 1. Try localStorage first
-  var ss=ldS(c);
-  if(ss){
-    S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};
-    S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;S.startTimestamp=ss.startTimestamp||null;
-  }
-  // 2. If no localStorage, recover from LIVE data
-  else if(LIVE[c]){
-    var lv=LIVE[c];
-    S.ap=lv.currentPhase||null;
-    S.ph={setup:lv.setupSec||0,running:lv.cycleSec||0,qchold:lv.qcHoldSec||0,breakdown:lv.breakdownSec||0};
-    S.te=lv.totalSec||0;
-    S.startTimestamp=lv.startTimestamp||null;
-    // Reconstruct gs from totalSec
-    if(S.te>0){S.gs=Date.now()/1000-S.te;S.lt=Date.now()/1000;}
-    else{S.gs=null;S.lt=null;}
-    S.done=false;
-  }
-  // 3. Fresh start
-  else{
-    S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.gs=null;S.lt=null;S.te=0;S.done=false;S.startTimestamp=null;
-  }
-
-  if(TI)clearInterval(TI);TI=setInterval(tk,1000);
-  if(SI)clearInterval(SI);SI=setInterval(aS,SAVE_MS);
-  rOP();
-}
+// ---- OPERATOR opens job (from supervisor) ----
 function oOP(c){
-  // For supervisor, fetch live data first to enable recovery
-  if(API_URL&&!LIVE[c]){
+  S.isAdmin=false;
+  // Fetch live data for recovery if no localStorage
+  if(API_URL){
     apiGet({action:'getLiveStatus'}).then(function(d){
       if(d.success&&d.machines)d.machines.forEach(function(m){LIVE[m.productionCode]=m;});
       openJob(c);
     }).catch(function(){openJob(c);});
   }else openJob(c);
 }
+function openJob(c){
+  var all=Object.assign({},SAMPLE,S.aj),j=all[c];if(!j)return;
+  if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}
+  S.v='op';S.pc=c;S.j=j;S.sl=null;
+  // Try localStorage first
+  var ss=ldS(c);
+  if(ss){S.ap=ss.ap;S.ph={setup:ss.ph.setup,running:ss.ph.running,qchold:ss.ph.qchold,breakdown:ss.ph.breakdown};S.gs=ss.gs;S.te=ss.te;S.lt=ss.lt||Date.now()/1000;S.done=ss.done||false;S.startTimestamp=ss.startTimestamp||null;}
+  // Recover from Live Log if no local data
+  else if(LIVE[c]){var lv=LIVE[c];S.ap=lv.currentPhase||null;S.ph={setup:lv.setupSec||0,running:lv.cycleSec||0,qchold:lv.qcHoldSec||0,breakdown:lv.breakdownSec||0};S.te=lv.totalSec||0;S.startTimestamp=lv.startTimestamp||null;if(S.te>0){S.gs=Date.now()/1000-S.te;S.lt=Date.now()/1000;}else{S.gs=null;S.lt=null;}S.done=false;}
+  // Fresh
+  else{S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.gs=null;S.lt=null;S.te=0;S.done=false;S.startTimestamp=null;}
+  if(TI)clearInterval(TI);TI=setInterval(tk,1000);
+  if(SI)clearInterval(SI);SI=setInterval(pushLive,PUSH_MS);
+  rOP();
+}
 
-function rOP(){var j=S.j;$('app').innerHTML='<div class="hdr fi"><div style="display:flex;align-items:center;gap:6px"><button class="bb" onclick="gB()">&#8592;</button><span style="font-size:10px;color:var(--muted)">Code:</span><span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">'+e(S.pc)+'</span></div><div style="display:flex;align-items:center;gap:5px"><span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span><span id="st" style="font-size:10px;color:var(--muted)">Waiting</span></div></div><div class="ig fi d1"><div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">'+e(j.ie)+'</div></div><div><div class="il">Client</div><div class="iv">'+e(j.client)+'</div></div><div><div class="il">Part</div><div class="iv">'+e(j.part)+'</div></div><div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">'+e(j.machine)+'</div></div><div><div class="il">Qty</div><div class="iv">'+j.qty+'</div></div><div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">'+e(j.op)+'</div></div></div><div class="er fi d1"><div class="ei">Setup: <span style="color:var(--purple)">'+fH(j.estSetup)+'</span></div><div class="ei">Cycle: <span style="color:var(--cyan)">'+fH(j.estCycle)+'</span></div>'+(j.drgLink&&j.drgLink!=='#'?'<a href="'+e(j.drgLink)+'" target="_blank" class="dl">Drawing</a>':'')+'</div><div class="mtw fi d2"><div class="mtl mono">Total elapsed</div><div class="mt orb id" id="mt">00:00:00</div><div id="sbw"></div></div><div class="pg fi d3"><div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div><div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div><div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div><div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div></div><div class="ew fi d3"><div class="eb"><div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div><div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div><div class="em mono"><span>0h</span><span>Est: '+fH(j.estSetup+j.estCycle)+'</span><span>'+fH(Math.round((j.estSetup+j.estCycle)*1.5))+'</span></div></div></div><div class="si" id="si"></div><div class="bg fi d4"><button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')">Start setup</button><button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')">Start job</button><button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')">QC hold</button><button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')">Breakdown</button></div><button class="enb" id="be" onclick="eJ()" disabled>End job</button><div id="sla"></div>';uOU();}
+function rOP(){
+  var j=S.j,adm=S.isAdmin;
+  $('app').innerHTML='<div class="hdr fi"><div style="display:flex;align-items:center;gap:6px"><button class="bb" onclick="gB()">&#8592;</button><span style="font-size:10px;color:var(--muted)">Code:</span><span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">'+e(S.pc)+'</span></div><div style="display:flex;align-items:center;gap:5px">'+(adm?'<span style="font-size:8px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px;border-radius:3px">VIEW ONLY</span>':'')+'<span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span><span id="st" style="font-size:10px;color:var(--muted)">Waiting</span></div></div><div class="ig fi d1"><div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">'+e(j.ie)+'</div></div><div><div class="il">Client</div><div class="iv">'+e(j.client)+'</div></div><div><div class="il">Part</div><div class="iv">'+e(j.part)+'</div></div><div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">'+e(j.machine)+'</div></div><div><div class="il">Qty</div><div class="iv">'+j.qty+'</div></div><div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">'+e(j.op)+'</div></div></div><div class="er fi d1"><div class="ei">Setup: <span style="color:var(--purple)">'+fH(j.estSetup)+'</span></div><div class="ei">Cycle: <span style="color:var(--cyan)">'+fH(j.estCycle)+'</span></div>'+(j.drgLink&&j.drgLink!=='#'?'<a href="'+e(j.drgLink)+'" target="_blank" class="dl">Drawing</a>':'')+'</div><div class="mtw fi d2"><div class="mtl mono">Total elapsed</div><div class="mt orb id" id="mt">00:00:00</div><div id="sbw"></div></div><div class="pg fi d3"><div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div><div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div><div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div><div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div></div><div class="ew fi d3"><div class="eb"><div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div><div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div><div class="em mono"><span>0h</span><span>Est: '+fH(j.estSetup+j.estCycle)+'</span><span>'+fH(Math.round((j.estSetup+j.estCycle)*1.5))+'</span></div></div></div><div class="si" id="si"></div><div class="bg fi d4"><button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')"'+(adm?' disabled':'')+'>Start setup</button><button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')"'+(adm?' disabled':'')+'>Start job</button><button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')"'+(adm?' disabled':'')+'>QC hold</button><button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')"'+(adm?' disabled':'')+'>Breakdown</button></div><button class="enb" id="be" onclick="eJ()" disabled>End job</button><div id="sla"></div>';
+  uOU();
+}
 
 function uTD(){var mt=$('mt');if(!mt)return;var es=(S.j.estSetup+S.j.estCycle)*60;mt.textContent=fmt(S.te);mt.className='mt orb'+(S.done?' dn':S.te>es?' ov':S.ap?'':' id');['setup','running','qchold','breakdown'].forEach(function(p,i){var el=$('pt'+i);if(el)el.textContent=fmt(S.ph[p]);});var ef=cE();var ee=$('ep');if(ee&&S.te>0){ee.textContent=ef+'%';ee.style.color=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}var fe=$('ef');if(fe){var pc=Math.min(100,(S.te/es)*100);fe.style.width=pc+'%';fe.style.background=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}}
 
-function uOU(){var pk=['setup','running','qchold','breakdown'],lb=[['Start setup','Setup...'],['Start job','Cutting...'],['QC hold','QC hold...'],['Breakdown','Brkdown...']];pk.forEach(function(p,i){var bx=$('pb'+i);if(bx)bx.className='pb'+(S.ap===p?' ac':'');var bt=$('b'+i);if(bt){bt.className='ab'+(S.ap===p?' ac2':'');bt.disabled=S.done;bt.textContent=S.ap===p?lb[i][1]:lb[i][0];}});var eb=$('be');if(eb){eb.disabled=S.done||!S.ap;eb.className='enb'+(S.done?' dn':'');eb.textContent=S.done?'Job completed':'End job';}var ld=$('ld'),st=$('st');if(ld&&st){if(S.done){ld.style.background='var(--green)';st.style.color='var(--green)';st.textContent='Done';}else if(S.ap){var c=COL[S.ap];ld.style.background=c.c;st.style.color=c.c;st.textContent=c.l;}else{ld.style.background='var(--dim)';st.style.color='var(--muted)';st.textContent='Waiting';}}var bw=$('sbw');if(bw){if(S.ap&&!S.done){var c2=COL[S.ap];bw.innerHTML='<span class="sb" style="color:'+c2.c+';border-color:'+c2.c+';background:'+c2.b+'">'+c2.l+'</span>';}else if(S.done)bw.innerHTML='<span class="sb" style="color:var(--green);border-color:var(--green);background:var(--green-g)">Done</span>';else bw.innerHTML='';}uTD();uSI();if(S.sl){var s=S.sl,la=$('sla');if(la)la.innerHTML='<div class="sl fi"><h3>'+(s.ok?'Logged':'Saving...')+'</h3><table class="st"><thead><tr><th>IE</th><th>Mch</th><th>Setup</th><th>Cycle</th><th>QC</th><th>Bd</th><th>Total</th><th>Eff</th></tr></thead><tbody><tr><td class="mono" style="color:var(--gold)">'+e(s.ie)+'</td><td>'+e(s.mc)+'</td><td style="color:var(--purple)">'+fmt(s.su)+'</td><td style="color:var(--cyan)">'+fmt(s.cy)+'</td><td style="color:var(--amber)">'+fmt(s.qc)+'</td><td style="color:var(--red)">'+fmt(s.bd)+'</td><td style="font-weight:700">'+fmt(s.to)+'</td><td style="color:'+(s.ef>=90?'var(--green)':s.ef>=70?'var(--amber)':'var(--red)')+';font-weight:900">'+s.ef+'%</td></tr></tbody></table>'+(s.err?'<p style="font-size:9px;color:var(--red);margin-top:6px">WiFi error.</p>':'')+(s.ok?'<p style="font-size:9px;color:var(--green);margin-top:6px">Logged.</p>':'')+'</div>';}}
+function uOU(){
+  var pk=['setup','running','qchold','breakdown'],lb=[['Start setup','Setup...'],['Start job','Cutting...'],['QC hold','QC hold...'],['Breakdown','Brkdown...']],adm=S.isAdmin;
+  pk.forEach(function(p,i){var bx=$('pb'+i);if(bx)bx.className='pb'+(S.ap===p?' ac':'');var bt=$('b'+i);if(bt){bt.className='ab'+(S.ap===p?' ac2':'');bt.disabled=S.done||adm;bt.textContent=S.ap===p?lb[i][1]:lb[i][0];}});
+  var eb=$('be');if(eb){eb.disabled=S.done||!S.ap;eb.className='enb'+(S.done?' dn':'');eb.textContent=S.done?'Job completed':'End job';}
+  var ld=$('ld'),st=$('st');if(ld&&st){if(S.done){ld.style.background='var(--green)';st.style.color='var(--green)';st.textContent='Done';}else if(S.ap){var c=COL[S.ap];ld.style.background=c.c;st.style.color=c.c;st.textContent=c.l;}else{ld.style.background='var(--dim)';st.style.color='var(--muted)';st.textContent='Waiting';}}
+  var bw=$('sbw');if(bw){if(S.ap&&!S.done){var c2=COL[S.ap];bw.innerHTML='<span class="sb" style="color:'+c2.c+';border-color:'+c2.c+';background:'+c2.b+'">'+c2.l+'</span>';}else if(S.done)bw.innerHTML='<span class="sb" style="color:var(--green);border-color:var(--green);background:var(--green-g)">Done</span>';else bw.innerHTML='';}
+  uTD();uSI();
+  if(S.sl){var s=S.sl,la=$('sla');if(la)la.innerHTML='<div class="sl fi"><h3>'+(s.ok?'Logged':'Saving...')+'</h3><table class="st"><thead><tr><th>IE</th><th>Mch</th><th>Setup</th><th>Cycle</th><th>QC</th><th>Bd</th><th>Total</th><th>Eff</th></tr></thead><tbody><tr><td class="mono" style="color:var(--gold)">'+e(s.ie)+'</td><td>'+e(s.mc)+'</td><td style="color:var(--purple)">'+fmt(s.su)+'</td><td style="color:var(--cyan)">'+fmt(s.cy)+'</td><td style="color:var(--amber)">'+fmt(s.qc)+'</td><td style="color:var(--red)">'+fmt(s.bd)+'</td><td style="font-weight:700">'+fmt(s.to)+'</td><td style="color:'+(s.ef>=90?'var(--green)':s.ef>=70?'var(--amber)':'var(--red)')+';font-weight:900">'+s.ef+'%</td></tr></tbody></table>'+(s.err?'<p style="font-size:9px;color:var(--red);margin-top:6px">Error</p>':'')+(s.ok?'<p style="font-size:9px;color:var(--green);margin-top:6px">Done</p>':'')+'</div>';}
+}
 
-function gB(){if(TI){clearInterval(TI);TI=null;}if(SI){clearInterval(SI);SI=null;}savS();S.v='sup';S.pc=null;S.j=null;S.sl=null;S.startTimestamp=null;if(S.ae){S.v='admin';rAD();}else rSU();}
+function gB(){if(TI){clearInterval(TI);TI=null;}if(SI){clearInterval(SI);SI=null;}if(!S.isAdmin)savS();S.v='sup';S.pc=null;S.j=null;S.sl=null;S.startTimestamp=null;S.isAdmin=false;if(S.ae){S.v='admin';rAD();}else rSU();}
 
 function init(){var p=new URLSearchParams(window.location.search),c=p.get('code'),m=p.get('mode');
   if(m==='admin'){oAL();return;}
   if(c){
-    if(API_URL){
-      // Fetch both job info and live data for recovery
-      Promise.all([
-        apiGet({action:'getJob',code:c}).catch(function(){return{success:false};}),
-        apiGet({action:'getLiveStatus'}).catch(function(){return{success:false};})
-      ]).then(function(r){
-        if(r[0].success&&r[0].job){var j=r[0].job;SAMPLE[c]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:'idle'};}
-        if(r[1].success&&r[1].machines)r[1].machines.forEach(function(m){LIVE[m.productionCode]=m;});
-        openJob(c);
-      });
-    }else if(SAMPLE[c])openJob(c);else rSU();
+    if(API_URL){Promise.all([apiGet({action:'getJob',code:c}).catch(function(){return{success:false};}),apiGet({action:'getLiveStatus'}).catch(function(){return{success:false};})]).then(function(r){if(r[0].success&&r[0].job){var j=r[0].job;SAMPLE[c]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:'idle'};}if(r[1].success&&r[1].machines)r[1].machines.forEach(function(m){LIVE[m.productionCode]=m;});openJob(c);});}
+    else if(SAMPLE[c])openJob(c);else rSU();
   }else rSU();
 }
 init();
