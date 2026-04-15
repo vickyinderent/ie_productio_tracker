@@ -125,7 +125,7 @@ function pushLive(){
   apiPost({action:'liveUpdate',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,currentPhase:S.ap||'idle',setupSec:Math.round(S.ph.setup),cycleSec:Math.round(S.ph.running),qcHoldSec:Math.round(S.ph.qchold),breakdownSec:Math.round(S.ph.breakdown),totalSec:Math.round(S.te),efficiency:cE(),estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle,startTimestamp:S.startTimestamp||''}).then(function(){S.ls=Date.now();uSI();}).catch(function(){});
 }
 function cE(){var es=(S.j.estSetup+S.j.estCycle)*60;return S.te>0?Math.round((es/S.te)*100):0;}
-function uSI(){var el=$('si');if(!el)return;if(!S.gs||S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<30?'var(--green)':a<60?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Synced '+a+'s ago':'Waiting...');}
+function uSI(){var el=$('si');if(!el)return;if(S.isAdmin){el.innerHTML='<span class="dt" style="background:var(--cyan)"></span>Live from sheet &middot; auto-refresh 60s';return;}if(!S.gs||S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<30?'var(--green)':a<60?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Synced '+a+'s ago':'Waiting...');}
 function tk(){if(!S.gs||S.done)return;var n=Date.now()/1000;if(S.ap&&S.lt)S.ph[S.ap]+=(n-S.lt);S.te=n-S.gs;S.lt=n;uTD();uSI();}
 
 // Operator presses phase button — push immediately
@@ -200,26 +200,30 @@ function renderAD(){
   S.adminTimer=setTimeout(function(){if(S.ae&&S.v!=='op')rAD();},60000);
 }
 
-// Admin opens a machine card — READ-ONLY view, only END button works
+// Admin opens a machine card — READ-ONLY, NO local timer, fetches from sheet
 function aVJ(c){
   var all=Object.assign({},SAMPLE,S.aj),j=all[c];if(!j)return;
   if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}
-  S.v='op';S.pc=c;S.j=j;S.sl=null;S.isAdmin=true;
-  // Load state from Live Log (sheet data), NOT localStorage
-  var lv=LIVE[c];
-  if(lv){
-    S.ap=lv.currentPhase||null;
-    S.ph={setup:lv.setupSec||0,running:lv.cycleSec||0,qchold:lv.qcHoldSec||0,breakdown:lv.breakdownSec||0};
-    S.te=lv.totalSec||0;
-    S.startTimestamp=lv.startTimestamp||null;
-    // Reconstruct running gs
-    if(S.te>0){S.gs=Date.now()/1000-S.te;S.lt=Date.now()/1000;}else{S.gs=null;S.lt=null;}
-    S.done=false;
-  }else{S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.gs=null;S.lt=null;S.te=0;S.done=false;S.startTimestamp=null;}
-  if(TI)clearInterval(TI);TI=setInterval(tk,1000);
-  // Admin does NOT auto-push — read only
+  // Kill ALL intervals — admin runs ZERO local timers
+  if(TI){clearInterval(TI);TI=null;}
   if(SI){clearInterval(SI);SI=null;}
+  S.v='op';S.pc=c;S.j=j;S.sl=null;S.isAdmin=true;S.done=false;
+  // Set frozen values from LIVE data
+  adminSetFromLive(c);
   rOP();
+  // Auto-refresh from sheet every 60s
+  SI=setInterval(adminRefresh,60000);
+}
+function adminSetFromLive(c){
+  var lv=LIVE[c];
+  if(lv){S.ap=lv.currentPhase||null;S.ph={setup:lv.setupSec||0,running:lv.cycleSec||0,qchold:lv.qcHoldSec||0,breakdown:lv.breakdownSec||0};S.te=lv.totalSec||0;S.startTimestamp=lv.startTimestamp||null;S.gs=S.te>0?1:null;S.lt=null;}
+  else{S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.gs=null;S.lt=null;S.te=0;S.startTimestamp=null;}
+}
+function adminRefresh(){
+  if(!S.isAdmin||!S.pc||!API_URL)return;
+  apiGet({action:'getLiveStatus'}).then(function(d){
+    if(d.success&&d.machines){d.machines.forEach(function(m){LIVE[m.productionCode]=m;});adminSetFromLive(S.pc);uTD();uOU();}
+  }).catch(function(){});
 }
 function aLO(){S.ae=null;if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}try{localStorage.removeItem('IEA');}catch(x){}rSU();}
 
@@ -277,8 +281,8 @@ function openJob(c){
 }
 
 function rOP(){
-  var j=S.j,adm=S.isAdmin;
-  $('app').innerHTML='<div class="hdr fi"><div style="display:flex;align-items:center;gap:6px"><button class="bb" onclick="gB()">&#8592;</button><span style="font-size:10px;color:var(--muted)">Code:</span><span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">'+e(S.pc)+'</span></div><div style="display:flex;align-items:center;gap:5px">'+(adm?'<span style="font-size:8px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px;border-radius:3px">VIEW ONLY</span>':'')+'<span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span><span id="st" style="font-size:10px;color:var(--muted)">Waiting</span></div></div><div class="ig fi d1"><div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">'+e(j.ie)+'</div></div><div><div class="il">Client</div><div class="iv">'+e(j.client)+'</div></div><div><div class="il">Part</div><div class="iv">'+e(j.part)+'</div></div><div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">'+e(j.machine)+'</div></div><div><div class="il">Qty</div><div class="iv">'+j.qty+'</div></div><div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">'+e(j.op)+'</div></div></div><div class="er fi d1"><div class="ei">Setup: <span style="color:var(--purple)">'+fH(j.estSetup)+'</span></div><div class="ei">Cycle: <span style="color:var(--cyan)">'+fH(j.estCycle)+'</span></div>'+(j.drgLink&&j.drgLink!=='#'?'<a href="'+e(j.drgLink)+'" target="_blank" class="dl">Drawing</a>':'')+'</div><div class="mtw fi d2"><div class="mtl mono">Total elapsed</div><div class="mt orb id" id="mt">00:00:00</div><div id="sbw"></div></div><div class="pg fi d3"><div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div><div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div><div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div><div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div></div><div class="ew fi d3"><div class="eb"><div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div><div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div><div class="em mono"><span>0h</span><span>Est: '+fH(j.estSetup+j.estCycle)+'</span><span>'+fH(Math.round((j.estSetup+j.estCycle)*1.5))+'</span></div></div></div><div class="si" id="si"></div><div class="bg fi d4"><button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')"'+(adm?' disabled':'')+'>Start setup</button><button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')"'+(adm?' disabled':'')+'>Start job</button><button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')"'+(adm?' disabled':'')+'>QC hold</button><button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')"'+(adm?' disabled':'')+'>Breakdown</button></div><button class="enb" id="be" onclick="eJ()" disabled>End job</button><div id="sla"></div>';
+  var j=S.j,adm=S.isAdmin,drg=j.drgLink&&j.drgLink!=='#'?j.drgLink:'';
+  $('app').innerHTML='<div class="hdr fi"><div style="display:flex;align-items:center;gap:6px"><button class="bb" onclick="gB()">&#8592;</button><span style="font-size:10px;color:var(--muted)">Code:</span><span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">'+e(S.pc)+'</span>'+(drg?'<a href="'+e(drg)+'" target="_blank" class="dl" style="margin-left:4px">Drawing</a>':'')+'</div><div style="display:flex;align-items:center;gap:5px">'+(adm?'<span style="font-size:8px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px;border-radius:3px">VIEW ONLY</span>':'')+'<span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span><span id="st" style="font-size:10px;color:var(--muted)">Waiting</span></div></div><div class="ig fi d1"><div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">'+e(j.ie)+'</div></div><div><div class="il">Client</div><div class="iv">'+e(j.client)+'</div></div><div><div class="il">Part</div><div class="iv">'+e(j.part)+'</div></div><div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">'+e(j.machine)+'</div></div><div><div class="il">Qty</div><div class="iv">'+j.qty+'</div></div><div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">'+e(j.op)+'</div></div></div><div class="er fi d1"><div class="ei">Setup: <span style="color:var(--purple)">'+fH(j.estSetup)+'</span></div><div class="ei">Cycle: <span style="color:var(--cyan)">'+fH(j.estCycle)+'</span></div></div><div class="mtw fi d2"><div class="mtl mono">Total elapsed</div><div class="mt orb id" id="mt">00:00:00</div><div id="sbw"></div></div><div class="pg fi d3"><div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div><div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div><div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div><div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div></div><div class="ew fi d3"><div class="eb"><div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div><div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div><div class="em mono"><span>0h</span><span>Est: '+fH(j.estSetup+j.estCycle)+'</span><span>'+fH(Math.round((j.estSetup+j.estCycle)*1.5))+'</span></div></div></div><div class="si" id="si"></div><div class="bg fi d4"><button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')"'+(adm?' disabled':'')+'>Start setup</button><button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')"'+(adm?' disabled':'')+'>Start job</button><button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')"'+(adm?' disabled':'')+'>QC hold</button><button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')"'+(adm?' disabled':'')+'>Breakdown</button></div><button class="enb" id="be" onclick="eJ()" disabled>End job</button><div id="sla"></div>';
   uOU();
 }
 
