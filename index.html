@@ -94,10 +94,9 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 <body>
 <div id="app"></div>
 <script>
-var API_URL='https://script.google.com/macros/s/AKfycbxHv6ZrGoZvSITiT_g34i7g-rp-CudhDAoWBcywVFT6os2AHEBiVvKJMzgHxuqqx48-/exec';
+var API_URL='https://script.google.com/macros/s/AKfycbwQwQmVTclkU1__zxWXMRlXWQLlXJXxjqJYPDbAeAIKccU1ZUOom4No8YrRei4o_RkK/exec';
 var MACHINES=['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
 var ADMIN_EMAILS=['vicky@inderent.com','chiranjeev@inderent.com','raoinderjeet@yahoo.com','sachin.s@inderent.com'];
-// Fetch from sheet every 10s on operator phone, 30s on admin dashboard
 var OP_REFRESH=10*1000;
 var ADM_REFRESH=30*1000;
 var SAMPLE={},LIVE={},SHEET_LOADED=false;
@@ -112,84 +111,87 @@ function toast(msg,er){var t=document.createElement('div');t.className='toast'+(
 function apiGet(p){var q=Object.keys(p).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(p[k]);}).join('&');return fetch(API_URL+'?'+q,{redirect:'follow'}).then(function(r){return r.json();});}
 function apiPost(d){return fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).then(function(r){return r.json();});}
 
-// Light state — no localStorage. S.ph/S.te come from sheet.
-var S={v:'sup',pc:null,j:null,ap:null,ph:{setup:0,running:0,qchold:0,breakdown:0},te:0,done:false,sl:null,sf:false,aj:{},ls:0,ae:null,operators:null,nextCode:null,adminTimer:null,opTimer:null,phaseStart:null,isAdmin:false,busy:false};
+// State — no localStorage. baseX = last fetched values. phaseStart = when current phase began.
+// Display = base + elapsed-since-phase-start, recomputed every second (local smoothing)
+var S={v:'sup',pc:null,j:null,ap:null,te:0,done:false,sl:null,sf:false,aj:{},ls:0,ae:null,operators:null,nextCode:null,adminTimer:null,opTimer:null,tickTimer:null,phaseStart:null,isAdmin:false,busy:false,
+  baseSetup:0,baseRunning:0,baseQchold:0,baseBreakdown:0,
+  dispSetup:0,dispRunning:0,dispQchold:0,dispBreakdown:0};
 
-// Pull fresh data from sheet for current job
+function applyLive(lv){
+  if(!lv)return;
+  S.ap=lv.currentPhase||null;
+  S.phaseStart=lv.phaseStartedAt||null;
+  // Base = total banked in sheet (phaseStart resets at every bank, so after a fresh bank, base IS the sheet value)
+  // But getLiveJob already adds elapsed. We need to subtract elapsed from current phase to get "base"
+  var s=lv.setupSec||0, r=lv.cycleSec||0, q=lv.qcHoldSec||0, b=lv.breakdownSec||0;
+  var elapsed=0;
+  if(S.phaseStart && S.ap){
+    var ps=new Date(S.phaseStart);
+    if(!isNaN(ps.getTime())){
+      elapsed=Math.max(0,Math.floor((Date.now()-ps.getTime())/1000));
+    }
+  }
+  S.baseSetup  = s - (S.ap==='setup'?elapsed:0);
+  S.baseRunning= r - (S.ap==='running'?elapsed:0);
+  S.baseQchold = q - (S.ap==='qchold'?elapsed:0);
+  S.baseBreakdown = b - (S.ap==='breakdown'?elapsed:0);
+  if(S.baseSetup<0)S.baseSetup=0;if(S.baseRunning<0)S.baseRunning=0;
+  if(S.baseQchold<0)S.baseQchold=0;if(S.baseBreakdown<0)S.baseBreakdown=0;
+  S.ls=Date.now();
+  tick();
+}
+
+// Fetch live state from sheet
 function pullLive(){
   if(!S.pc||!API_URL||S.done)return Promise.resolve();
   return apiGet({action:'getLiveJob',code:S.pc}).then(function(d){
-    if(d.success&&d.live){
-      var lv=d.live;
-      S.ap=lv.currentPhase||null;
-      S.ph={setup:lv.setupSec||0,running:lv.cycleSec||0,qchold:lv.qcHoldSec||0,breakdown:lv.breakdownSec||0};
-      S.te=lv.totalSec||0;
-      S.phaseStart=lv.phaseStartedAt||null;
-      S.ls=Date.now();
-      uTD();uOU();
-    }
+    if(d.success&&d.live)applyLive(d.live);
   }).catch(function(){});
 }
 
-// Local tick — extrapolates from phaseStart between sheet pulls
+// Local tick — smooth display between sheet fetches
 function tick(){
-  if(S.done||!S.phaseStart||!S.ap)return;
-  var ps=new Date(S.phaseStart);
-  if(isNaN(ps.getTime()))return;
-  var el=Math.floor((Date.now()-ps.getTime())/1000);
-  if(el<0||el>86400)return;
-  // Base times are committed from sheet. Add seconds-since-phase-start to current phase.
-  var base={setup:S.baseSetup||0,running:S.baseRunning||0,qchold:S.baseQchold||0,breakdown:S.baseBreakdown||0};
-  S.ph={setup:base.setup,running:base.running,qchold:base.qchold,breakdown:base.breakdown};
-  S.ph[S.ap]=base[S.ap]+el;
-  S.te=S.ph.setup+S.ph.running+S.ph.qchold+S.ph.breakdown;
-  uTD();
-}
-
-// Capture base times whenever we pull from sheet
-function captureBase(){
-  // Subtract the current phase's uncommitted elapsed to get banked base
-  if(!S.phaseStart||!S.ap){
-    S.baseSetup=S.ph.setup;S.baseRunning=S.ph.running;S.baseQchold=S.ph.qchold;S.baseBreakdown=S.ph.breakdown;
-    return;
+  if(S.done)return;
+  var elapsed=0;
+  if(S.phaseStart && S.ap){
+    var ps=new Date(S.phaseStart);
+    if(!isNaN(ps.getTime())){elapsed=Math.max(0,Math.floor((Date.now()-ps.getTime())/1000));}
   }
-  var ps=new Date(S.phaseStart);
-  var el=isNaN(ps.getTime())?0:Math.max(0,Math.floor((Date.now()-ps.getTime())/1000));
-  S.baseSetup=S.ph.setup-(S.ap==='setup'?el:0);
-  S.baseRunning=S.ph.running-(S.ap==='running'?el:0);
-  S.baseQchold=S.ph.qchold-(S.ap==='qchold'?el:0);
-  S.baseBreakdown=S.ph.breakdown-(S.ap==='breakdown'?el:0);
-  if(S.baseSetup<0)S.baseSetup=0;if(S.baseRunning<0)S.baseRunning=0;
-  if(S.baseQchold<0)S.baseQchold=0;if(S.baseBreakdown<0)S.baseBreakdown=0;
+  S.dispSetup = S.baseSetup + (S.ap==='setup'?elapsed:0);
+  S.dispRunning = S.baseRunning + (S.ap==='running'?elapsed:0);
+  S.dispQchold = S.baseQchold + (S.ap==='qchold'?elapsed:0);
+  S.dispBreakdown = S.baseBreakdown + (S.ap==='breakdown'?elapsed:0);
+  S.te = S.dispSetup + S.dispRunning + S.dispQchold + S.dispBreakdown;
+  uTD();
 }
 
 function cE(){var es=(S.j.estSetup+S.j.estCycle)*60;return S.te>0?Math.round((es/S.te)*100):0;}
 function uSI(){var el=$('si');if(!el)return;if(S.isAdmin){el.innerHTML='<span class="dt" style="background:var(--cyan)"></span>Live from sheet';return;}if(S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<15?'var(--green)':a<30?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Synced '+a+'s ago':'Connecting...');}
 
-// Operator presses phase button — send to server, then pull fresh
+// Phase button — POST to server, then pull fresh
 function sP(p){
   if(S.done||S.isAdmin||S.busy)return;
   S.busy=true;
-  apiPost({action:'setPhase',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,currentPhase:p,estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle,startTimestamp:S.phaseStart||new Date().toISOString()}).then(function(d){
+  apiPost({action:'setPhase',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,currentPhase:p,estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle,startTimestamp:new Date().toISOString()}).then(function(d){
     S.busy=false;
-    if(d.success){
-      pullLive().then(captureBase);
-    }else{toast('Save failed',1);}
+    if(d.success){pullLive();}else{toast('Save failed',1);}
   }).catch(function(){S.busy=false;toast('Network error',1);});
 }
 
 function eJ(){
   if(S.done||!S.ap||S.busy)return;
-  if(!confirm('END this job?\n\nSetup: '+fmt(S.ph.setup)+'\nCycle: '+fmt(S.ph.running)+'\nQC Hold: '+fmt(S.ph.qchold)+'\nTotal: '+fmt(S.te)+'\n\nCannot undo.'))return;
+  if(!confirm('END this job?\n\nSetup: '+fmt(S.dispSetup)+'\nCycle: '+fmt(S.dispRunning)+'\nQC Hold: '+fmt(S.dispQchold)+'\nTotal: '+fmt(S.te)+'\n\nCannot undo.'))return;
   S.busy=true;
-  apiPost({action:'logTime',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle,startTimestamp:S.phaseStart||'',endTimestamp:new Date().toISOString()}).then(function(d){
+  apiPost({action:'logTime',productionCode:S.pc,ieNumber:S.j.ie,machine:S.j.machine,operator:S.j.operator,estSetupMin:S.j.estSetup,estCycleMin:S.j.estCycle,endTimestamp:new Date().toISOString()}).then(function(d){
     S.busy=false;
     if(d.success){
       S.done=true;S.ap=null;
-      S.ph={setup:d.setupSec||0,running:d.cycleSec||0,qchold:d.qcHoldSec||0,breakdown:d.breakdownSec||0};
+      S.baseSetup=d.setupSec||0;S.baseRunning=d.cycleSec||0;S.baseQchold=d.qcHoldSec||0;S.baseBreakdown=d.breakdownSec||0;
       S.te=d.totalSec||0;
+      S.dispSetup=S.baseSetup;S.dispRunning=S.baseRunning;S.dispQchold=S.baseQchold;S.dispBreakdown=S.baseBreakdown;
       S.sl={pc:S.pc,ie:S.j.ie,mc:S.j.machine,op:S.j.operator,su:d.setupSec,cy:d.cycleSec,qc:d.qcHoldSec,bd:d.breakdownSec,to:d.totalSec,ef:d.efficiency,ok:true};
       if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
+      if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
       uTD();uOU();toast('Job logged!');
     }else{toast('Save failed',1);}
   }).catch(function(){S.busy=false;toast('Network error',1);});
@@ -240,22 +242,18 @@ function renderAD(){
   S.adminTimer=setTimeout(function(){if(S.ae&&S.v!=='op')rAD();},ADM_REFRESH);
 }
 
-// Admin opens a machine card — read only, auto-refresh
+// Admin opens machine — read-only, full live view with auto-refresh
 function aVJ(c){
   var all=Object.assign({},SAMPLE,S.aj),j=all[c];if(!j)return;
   if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}
   if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
+  if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
   S.v='op';S.pc=c;S.j=j;S.sl=null;S.isAdmin=true;S.done=false;
-  setFromLive(c);
+  var lv=LIVE[c];if(lv)applyLive(lv);
   rOP();
-  // Pull from sheet every 30s, no local tick
-  S.opTimer=setInterval(function(){pullLive().then(function(){captureBase();});},ADM_REFRESH);
-}
-function setFromLive(c){
-  var lv=LIVE[c];
-  if(lv){S.ap=lv.currentPhase||null;S.ph={setup:lv.setupSec||0,running:lv.cycleSec||0,qchold:lv.qcHoldSec||0,breakdown:lv.breakdownSec||0};S.te=lv.totalSec||0;S.phaseStart=lv.phaseStartedAt||null;}
-  else{S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.te=0;S.phaseStart=null;}
-  captureBase();
+  pullLive();
+  S.opTimer=setInterval(pullLive, ADM_REFRESH);
+  S.tickTimer=setInterval(tick, 1000);
 }
 function aLO(){S.ae=null;if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}try{localStorage.removeItem('IEA');}catch(x){}rSU();}
 
@@ -290,14 +288,15 @@ function oOP(c){
   S.isAdmin=false;
   var all=Object.assign({},SAMPLE,S.aj),j=all[c];if(!j)return;
   S.v='op';S.pc=c;S.j=j;S.sl=null;S.done=false;
-  S.ap=null;S.ph={setup:0,running:0,qchold:0,breakdown:0};S.te=0;S.phaseStart=null;
+  S.ap=null;S.phaseStart=null;S.te=0;
+  S.baseSetup=0;S.baseRunning=0;S.baseQchold=0;S.baseBreakdown=0;
+  S.dispSetup=0;S.dispRunning=0;S.dispQchold=0;S.dispBreakdown=0;
   rOP();
-  // Pull live state from sheet immediately, then every 10s
-  pullLive().then(captureBase);
+  pullLive();
   if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
-  S.opTimer=setInterval(function(){pullLive().then(captureBase);},OP_REFRESH);
-  // Local tick for smooth between-fetches display
-  setInterval(tick,1000);
+  if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
+  S.opTimer=setInterval(pullLive, OP_REFRESH);
+  S.tickTimer=setInterval(tick, 1000);
 }
 
 function rOP(){
@@ -306,7 +305,22 @@ function rOP(){
   uOU();
 }
 
-function uTD(){var mt=$('mt');if(!mt)return;var es=(S.j.estSetup+S.j.estCycle)*60;mt.textContent=fmt(S.te);mt.className='mt orb'+(S.done?' dn':S.te>es?' ov':S.ap?'':' id');['setup','running','qchold','breakdown'].forEach(function(p,i){var el=$('pt'+i);if(el)el.textContent=fmt(S.ph[p]);});var ef=cE();var ee=$('ep');if(ee&&S.te>0){ee.textContent=ef+'%';ee.style.color=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}var fe=$('ef');if(fe){var pc=Math.min(100,(S.te/es)*100);fe.style.width=pc+'%';fe.style.background=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}}
+function uTD(){
+  var mt=$('mt');if(!mt)return;
+  var es=(S.j.estSetup+S.j.estCycle)*60;
+  mt.textContent=fmt(S.te);
+  mt.className='mt orb'+(S.done?' dn':S.te>es?' ov':S.ap?'':' id');
+  var p0=$('pt0'),p1=$('pt1'),p2=$('pt2'),p3=$('pt3');
+  if(p0)p0.textContent=fmt(S.dispSetup);
+  if(p1)p1.textContent=fmt(S.dispRunning);
+  if(p2)p2.textContent=fmt(S.dispQchold);
+  if(p3)p3.textContent=fmt(S.dispBreakdown);
+  var ef=cE();var ee=$('ep');
+  if(ee&&S.te>0){ee.textContent=ef+'%';ee.style.color=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}
+  var fe=$('ef');
+  if(fe){var pc=Math.min(100,(S.te/es)*100);fe.style.width=pc+'%';fe.style.background=ef>=90?'var(--green)':ef>=70?'var(--amber)':'var(--red)';}
+  uSI();
+}
 
 function uOU(){
   var pk=['setup','running','qchold','breakdown'],lb=[['Start setup','Setup...'],['Start job','Cutting...'],['QC hold','QC hold...'],['Breakdown','Brkdown...']],adm=S.isAdmin;
@@ -314,11 +328,11 @@ function uOU(){
   var eb=$('be');if(eb){eb.disabled=S.done||!S.ap;eb.className='enb'+(S.done?' dn':'');eb.textContent=S.done?'Job completed':'End job';}
   var ld=$('ld'),st=$('st');if(ld&&st){if(S.done){ld.style.background='var(--green)';st.style.color='var(--green)';st.textContent='Done';}else if(S.ap){var c=COL[S.ap];ld.style.background=c.c;st.style.color=c.c;st.textContent=c.l;}else{ld.style.background='var(--dim)';st.style.color='var(--muted)';st.textContent='Waiting';}}
   var bw=$('sbw');if(bw){if(S.ap&&!S.done){var c2=COL[S.ap];bw.innerHTML='<span class="sb" style="color:'+c2.c+';border-color:'+c2.c+';background:'+c2.b+'">'+c2.l+'</span>';}else if(S.done)bw.innerHTML='<span class="sb" style="color:var(--green);border-color:var(--green);background:var(--green-g)">Done</span>';else bw.innerHTML='';}
-  uTD();uSI();
+  uTD();
   if(S.sl){var s=S.sl,la=$('sla');if(la)la.innerHTML='<div class="sl fi"><h3>'+(s.ok?'Logged':'Saving...')+'</h3><table class="st"><thead><tr><th>IE</th><th>Mch</th><th>Setup</th><th>Cycle</th><th>QC</th><th>Bd</th><th>Total</th><th>Eff</th></tr></thead><tbody><tr><td class="mono" style="color:var(--gold)">'+e(s.ie)+'</td><td>'+e(s.mc)+'</td><td style="color:var(--purple)">'+fmt(s.su)+'</td><td style="color:var(--cyan)">'+fmt(s.cy)+'</td><td style="color:var(--amber)">'+fmt(s.qc)+'</td><td style="color:var(--red)">'+fmt(s.bd)+'</td><td style="font-weight:700">'+fmt(s.to)+'</td><td style="color:'+(s.ef>=90?'var(--green)':s.ef>=70?'var(--amber)':'var(--red)')+';font-weight:900">'+s.ef+'%</td></tr></tbody></table><p style="font-size:9px;color:var(--green);margin-top:6px">Logged to sheet.</p></div>';}
 }
 
-function gB(){if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}S.v='sup';S.pc=null;S.j=null;S.sl=null;S.phaseStart=null;var wasAdmin=S.isAdmin;S.isAdmin=false;if(S.ae||wasAdmin){S.v='admin';rAD();}else rSU();}
+function gB(){if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}S.v='sup';S.pc=null;S.j=null;S.sl=null;S.phaseStart=null;var wasAdmin=S.isAdmin;S.isAdmin=false;if(S.ae||wasAdmin){S.v='admin';rAD();}else rSU();}
 
 function init(){var p=new URLSearchParams(window.location.search),c=p.get('code'),m=p.get('mode');
   if(m==='admin'){oAL();return;}
