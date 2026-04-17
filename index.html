@@ -176,8 +176,23 @@ document.addEventListener('visibilitychange', function(){
     if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
     var interval=S.isAdmin?ADM_REFRESH:OP_REFRESH;
     S.opTimer=setInterval(pullLive,interval);
+    // Re-request wake lock
+    requestWakeLock();
   }
 });
+
+// Keep phone screen on while operator has a job open.
+// This prevents the "phone sleeps -> timer stops" issue.
+var wakeLock=null;
+function requestWakeLock(){
+  if('wakeLock' in navigator && S.v==='op' && !S.done && !S.isAdmin){
+    navigator.wakeLock.request('screen').then(function(lock){
+      wakeLock=lock;
+      lock.addEventListener('release',function(){wakeLock=null;});
+    }).catch(function(){});
+  }
+}
+function releaseWakeLock(){if(wakeLock){try{wakeLock.release();}catch(x){}wakeLock=null;}}
 
 function cE(){var es=(S.j.estSetup+S.j.estCycle)*60;return S.te>0?Math.round((es/S.te)*100):0;}
 function uSI(){var el=$('si');if(!el)return;if(S.isAdmin){el.innerHTML='<span class="dt" style="background:var(--cyan)"></span>Live from sheet';return;}if(S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<15?'var(--green)':a<30?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Synced '+a+'s ago':'Connecting...');}
@@ -311,6 +326,7 @@ function oOP(c){
   if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
   S.opTimer=setInterval(pullLive, OP_REFRESH);
   S.tickTimer=setInterval(tick, 1000);
+  requestWakeLock();  // Keep screen awake
 }
 
 function rOP(){
@@ -346,7 +362,7 @@ function uOU(){
   if(S.sl){var s=S.sl,la=$('sla');if(la)la.innerHTML='<div class="sl fi"><h3>'+(s.ok?'Logged':'Saving...')+'</h3><table class="st"><thead><tr><th>IE</th><th>Mch</th><th>Setup</th><th>Cycle</th><th>QC</th><th>Bd</th><th>Total</th><th>Eff</th></tr></thead><tbody><tr><td class="mono" style="color:var(--gold)">'+e(s.ie)+'</td><td>'+e(s.mc)+'</td><td style="color:var(--purple)">'+fmt(s.su)+'</td><td style="color:var(--cyan)">'+fmt(s.cy)+'</td><td style="color:var(--amber)">'+fmt(s.qc)+'</td><td style="color:var(--red)">'+fmt(s.bd)+'</td><td style="font-weight:700">'+fmt(s.to)+'</td><td style="color:'+(s.ef>=90?'var(--green)':s.ef>=70?'var(--amber)':'var(--red)')+';font-weight:900">'+s.ef+'%</td></tr></tbody></table><p style="font-size:9px;color:var(--green);margin-top:6px">Logged to sheet.</p></div>';}
 }
 
-function gB(){if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}S.v='sup';S.pc=null;S.j=null;S.sl=null;S.phaseStart=null;var wasAdmin=S.isAdmin;S.isAdmin=false;if(S.ae||wasAdmin){S.v='admin';rAD();}else rSU();}
+function gB(){releaseWakeLock();if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}S.v='sup';S.pc=null;S.j=null;S.sl=null;S.phaseStart=null;var wasAdmin=S.isAdmin;S.isAdmin=false;if(S.ae||wasAdmin){S.v='admin';rAD();}else rSU();}
 
 function init(){var p=new URLSearchParams(window.location.search),c=p.get('code'),m=p.get('mode');
   if(m==='admin'){oAL();return;}
