@@ -121,8 +121,6 @@ function applyLive(lv){
   if(!lv)return;
   S.ap=lv.currentPhase||null;
   S.phaseStart=lv.phaseStartedAt||null;
-  // Base = total banked in sheet (phaseStart resets at every bank, so after a fresh bank, base IS the sheet value)
-  // But getLiveJob already adds elapsed. We need to subtract elapsed from current phase to get "base"
   var s=lv.setupSec||0, r=lv.cycleSec||0, q=lv.qcHoldSec||0, b=lv.breakdownSec||0;
   var elapsed=0;
   if(S.phaseStart && S.ap){
@@ -139,6 +137,7 @@ function applyLive(lv){
   if(S.baseQchold<0)S.baseQchold=0;if(S.baseBreakdown<0)S.baseBreakdown=0;
   S.ls=Date.now();
   tick();
+  uOU(); // FIX: update buttons, status badge, phase indicator
 }
 
 // Fetch live state from sheet
@@ -164,6 +163,21 @@ function tick(){
   S.te = S.dispSetup + S.dispRunning + S.dispQchold + S.dispBreakdown;
   uTD();
 }
+
+// FIX: When phone wakes from sleep/background, browser kills setInterval.
+// Detect visibility change and immediately pull fresh data + restart timers.
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState==='visible' && S.v==='op' && S.pc && !S.done){
+    pullLive();
+    // Restart tick if dead
+    if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
+    S.tickTimer=setInterval(tick,1000);
+    // Restart pull if dead
+    if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
+    var interval=S.isAdmin?ADM_REFRESH:OP_REFRESH;
+    S.opTimer=setInterval(pullLive,interval);
+  }
+});
 
 function cE(){var es=(S.j.estSetup+S.j.estCycle)*60;return S.te>0?Math.round((es/S.te)*100):0;}
 function uSI(){var el=$('si');if(!el)return;if(S.isAdmin){el.innerHTML='<span class="dt" style="background:var(--cyan)"></span>Live from sheet';return;}if(S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<15?'var(--green)':a<30?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Synced '+a+'s ago':'Connecting...');}
