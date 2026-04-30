@@ -102,6 +102,11 @@ var ADM_REFRESH=30*1000;
 var SAMPLE={},LIVE={},SHEET_LOADED=false;
 var COL={setup:{c:'#a855f7',b:'rgba(168,85,247,.08)',l:'Setup'},running:{c:'#22d3ee',b:'rgba(34,211,238,.08)',l:'Cutting'},qchold:{c:'#fbbf24',b:'rgba(251,191,36,.08)',l:'QC Hold'},breakdown:{c:'#f87171',b:'rgba(248,113,113,.08)',l:'Breakdown'}};
 
+// Admin local tick: stores {phase, phaseStart, baseSecs, fetchedAt} per productionCode
+// so machine cards tick every second instead of freezing between 30s refreshes.
+var ADMIN_PHASE_START={};
+var ADMIN_TICK_TIMER=null;
+
 function fmt(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
 function fS(s){s=Math.max(0,Math.floor(s));var h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?h+'h'+String(m).padStart(2,'0')+'m':m+'m';}
 function fH(m){var h=Math.floor(m/60),mm=m%60;return mm?h+'h '+mm+'m':h+'h';}
@@ -111,8 +116,6 @@ function toast(msg,er){var t=document.createElement('div');t.className='toast'+(
 function apiGet(p){var q=Object.keys(p).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(p[k]);}).join('&');return fetch(API_URL+'?'+q,{redirect:'follow'}).then(function(r){return r.json();});}
 function apiPost(d){return fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).then(function(r){return r.json();});}
 
-// State — no localStorage. baseX = last fetched values. phaseStart = when current phase began.
-// Display = base + elapsed-since-phase-start, recomputed every second (local smoothing)
 var S={v:'sup',pc:null,j:null,ap:null,te:0,done:false,sl:null,sf:false,aj:{},ls:0,ae:null,operators:null,nextCode:null,adminTimer:null,opTimer:null,tickTimer:null,phaseStart:null,isAdmin:false,busy:false,
   baseSetup:0,baseRunning:0,baseQchold:0,baseBreakdown:0,
   dispSetup:0,dispRunning:0,dispQchold:0,dispBreakdown:0};
@@ -137,10 +140,9 @@ function applyLive(lv){
   if(S.baseQchold<0)S.baseQchold=0;if(S.baseBreakdown<0)S.baseBreakdown=0;
   S.ls=Date.now();
   tick();
-  uOU(); // FIX: update buttons, status badge, phase indicator
+  uOU();
 }
 
-// Fetch live state from sheet
 function pullLive(){
   if(!S.pc||!API_URL||S.done)return Promise.resolve();
   return apiGet({action:'getLiveJob',code:S.pc}).then(function(d){
@@ -148,7 +150,6 @@ function pullLive(){
   }).catch(function(){});
 }
 
-// Local tick — smooth display between sheet fetches
 function tick(){
   if(S.done)return;
   var elapsed=0;
@@ -164,25 +165,52 @@ function tick(){
   uTD();
 }
 
-// FIX: When phone wakes from sleep/background, browser kills setInterval.
-// Detect visibility change and immediately pull fresh data + restart timers.
+// ============================================================
+// ADMIN LOCAL TICK — machine cards update every second without
+// waiting for the 30-second full refresh of renderAD().
+// Stores base seconds + phaseStart time from each getLiveStatus
+// fetch, then adds elapsed locally on each 1s tick.
+// ============================================================
+function startAdminTick(){
+  stopAdminTick();
+  ADMIN_TICK_TIMER=setInterval(function(){
+    var now=Date.now();
+    document.querySelectorAll('[data-adm-pc]').forEach(function(el){
+      var pc=el.getAttribute('data-adm-pc');
+      var td=ADMIN_PHASE_START[pc];
+      if(!td||!td.phase||td.phase==='idle')return;
+      var elapsed=td.phaseStart?Math.max(0,Math.floor((now-td.phaseStart)/1000)):0;
+      var tot=td.baseTotal+elapsed;
+      // Update total timer
+      var totEl=el.querySelector('.adm-tot');
+      if(totEl)totEl.textContent=fmt(tot);
+      // Update individual phase timers
+      var phEls=el.querySelectorAll('[data-adm-ph]');
+      phEls.forEach(function(pe){
+        var ph=pe.getAttribute('data-adm-ph');
+        var base=td.bases[ph]||0;
+        pe.textContent=fS(base+(td.phase===ph?elapsed:0));
+      });
+    });
+  },1000);
+}
+
+function stopAdminTick(){
+  if(ADMIN_TICK_TIMER){clearInterval(ADMIN_TICK_TIMER);ADMIN_TICK_TIMER=null;}
+}
+
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState==='visible' && S.v==='op' && S.pc && !S.done){
     pullLive();
-    // Restart tick if dead
     if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
     S.tickTimer=setInterval(tick,1000);
-    // Restart pull if dead
     if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
     var interval=S.isAdmin?ADM_REFRESH:OP_REFRESH;
     S.opTimer=setInterval(pullLive,interval);
-    // Re-request wake lock
     requestWakeLock();
   }
 });
 
-// Keep phone screen on while operator has a job open.
-// This prevents the "phone sleeps -> timer stops" issue.
 var wakeLock=null;
 function requestWakeLock(){
   if('wakeLock' in navigator && S.v==='op' && !S.done && !S.isAdmin){
@@ -197,7 +225,6 @@ function releaseWakeLock(){if(wakeLock){try{wakeLock.release();}catch(x){}wakeLo
 function cE(){var es=(S.j.estSetup+S.j.estCycle)*60;return S.te>0?Math.round((es/S.te)*100):0;}
 function uSI(){var el=$('si');if(!el)return;if(S.isAdmin){el.innerHTML='<span class="dt" style="background:var(--cyan)"></span>Live from sheet';return;}if(S.done){el.innerHTML='';return;}var a=S.ls?Math.round((Date.now()-S.ls)/1000):999;var c=a<15?'var(--green)':a<30?'var(--amber)':'var(--red)';el.innerHTML='<span class="dt" style="background:'+c+'"></span>'+(S.ls?'Synced '+a+'s ago':'Connecting...');}
 
-// Phase button — POST to server, then pull fresh
 function sP(p){
   if(S.done||S.isAdmin||S.busy)return;
   S.busy=true;
@@ -232,6 +259,7 @@ function cAL(){var em=($('ae').value||'').trim().toLowerCase();if(ADMIN_EMAILS.i
 
 // ---- ADMIN DASHBOARD ----
 function rAD(){
+  stopAdminTick();
   if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}
   $('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">All machines &mdash; live</div></div><div style="display:flex;align-items:center;gap:8px"><button class="nb" onclick="history.back()">&#8592;</button><button class="nb" onclick="history.forward()">&#8594;</button><span style="font-size:9px;color:var(--muted)">'+e(S.ae)+'</span><button class="bb" onclick="aLO()">Logout</button></div></div><div class="loader">Loading...</div>';
   if(!API_URL){renderAD();return;}
@@ -243,12 +271,25 @@ function rAD(){
     if(jd.success&&jd.jobs){SAMPLE={};SHEET_LOADED=true;jd.jobs.forEach(function(j){SAMPLE[j.productionCode]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:j.status.toLowerCase()};});}
     if(jd.success&&jd.completedCodes)jd.completedCodes.forEach(function(c){cc[c]=true;});
     LIVE={};
+    ADMIN_PHASE_START={};
+    var fetchedAt=Date.now();
     if(ld.success&&ld.machines)ld.machines.forEach(function(m){
       if(cc[m.productionCode]||m.currentPhase==='completed')return;
       LIVE[m.productionCode]=m;
+      // Store tick data for local 1s updates between full refreshes
+      var phaseStartMs=0;
+      if(m.phaseStartedAt){var ps=new Date(m.phaseStartedAt);if(!isNaN(ps.getTime()))phaseStartMs=ps.getTime();}
+      ADMIN_PHASE_START[m.productionCode]={
+        phase:m.currentPhase||'idle',
+        phaseStart:phaseStartMs,
+        baseTotal:m.totalSec||0,
+        bases:{setup:m.setupSec||0,running:m.cycleSec||0,qchold:m.qcHoldSec||0,breakdown:m.breakdownSec||0},
+        fetchedAt:fetchedAt
+      };
       if(SAMPLE[m.productionCode]&&m.currentPhase&&m.currentPhase!=='idle'){SAMPLE[m.productionCode].ap=m.currentPhase;SAMPLE[m.productionCode].sts='running';}
     });
     renderAD();
+    startAdminTick();
   });
 }
 
@@ -265,15 +306,16 @@ function renderAD(){
       var mc=mm[m],ir=mc.s==='running'&&mc.j,lv=mc.lv;
       var phase=ir?mc.j.ap:null,pc=phase&&COL[phase]?COL[phase].c:'var(--dim)',pl=phase&&COL[phase]?COL[phase].l:'Idle';
       var suS=ir&&lv?lv.setupSec||0:0,cyS=ir&&lv?lv.cycleSec||0:0,qcS=ir&&lv?lv.qcHoldSec||0:0,bdS=ir&&lv?lv.breakdownSec||0:0,elS=ir&&lv?lv.totalSec||0:0;
-      var phB=ir?'<div class="phb"><div class="phi"><div class="phi-l" style="color:#a855f7">Setup</div><div class="phi-v mono" style="color:#a855f7">'+fS(suS)+'</div></div><div class="phi"><div class="phi-l" style="color:#22d3ee">Cycle</div><div class="phi-v mono" style="color:#22d3ee">'+fS(cyS)+'</div></div><div class="phi"><div class="phi-l" style="color:#fbbf24">QC</div><div class="phi-v mono" style="color:#fbbf24">'+fS(qcS)+'</div></div><div class="phi"><div class="phi-l" style="color:#f87171">Brkdn</div><div class="phi-v mono" style="color:#f87171">'+fS(bdS)+'</div></div></div>':'';
-      return'<div class="mc fi d'+(i%4+1)+'" onclick="'+(ir?"aVJ('"+e(mc.j.code)+"')":'')+'">'+'<div class="mca" style="background:'+(ir?pc:'var(--border)')+'"></div><div style="display:flex;align-items:center;justify-content:space-between"><span class="mn orb" style="color:'+(ir?'var(--text)':'var(--dim)')+'">'+m+'</span><span class="mty">'+mc.ty+'</span></div><div class="ms" style="color:'+pc+'">'+pl+'</div>'+(ir?'<div class="mie mono">'+e(mc.j.ie)+'</div><div class="mp">'+e(mc.j.part)+' &middot; '+e(mc.j.client)+'</div><div class="mtm mono" style="color:'+pc+'">'+fmt(elS)+'</div>'+phB+'<div style="font-size:8px;color:var(--muted);margin-top:2px">'+e(mc.j.operator)+'</div>':'<div class="midl">No active job</div>')+'</div>';
+      // data-adm-pc marks this card for the 1s tick; data-adm-ph marks individual phase timers
+      var phB=ir?'<div class="phb"><div class="phi"><div class="phi-l" style="color:#a855f7">Setup</div><div class="phi-v mono" data-adm-ph="setup" style="color:#a855f7">'+fS(suS)+'</div></div><div class="phi"><div class="phi-l" style="color:#22d3ee">Cycle</div><div class="phi-v mono" data-adm-ph="running" style="color:#22d3ee">'+fS(cyS)+'</div></div><div class="phi"><div class="phi-l" style="color:#fbbf24">QC</div><div class="phi-v mono" data-adm-ph="qchold" style="color:#fbbf24">'+fS(qcS)+'</div></div><div class="phi"><div class="phi-l" style="color:#f87171">Brkdn</div><div class="phi-v mono" data-adm-ph="breakdown" style="color:#f87171">'+fS(bdS)+'</div></div></div>':'';
+      return'<div class="mc fi d'+(i%4+1)+'"'+(ir?' data-adm-pc="'+e(mc.j.code)+'"':'')+' onclick="'+(ir?"aVJ('"+e(mc.j.code)+"')":'')+'">'+'<div class="mca" style="background:'+(ir?pc:'var(--border)')+'"></div><div style="display:flex;align-items:center;justify-content:space-between"><span class="mn orb" style="color:'+(ir?'var(--text)':'var(--dim)')+'">'+m+'</span><span class="mty">'+mc.ty+'</span></div><div class="ms" style="color:'+pc+'">'+pl+'</div>'+(ir?'<div class="mie mono">'+e(mc.j.ie)+'</div><div class="mp">'+e(mc.j.part)+' &middot; '+e(mc.j.client)+'</div><div class="mtm mono adm-tot" style="color:'+pc+'">'+fmt(elS)+'</div>'+phB+'<div style="font-size:8px;color:var(--muted);margin-top:2px">'+e(mc.j.operator)+'</div>':'<div class="midl">No active job</div>')+'</div>';
     }).join('')+'</div>';
-  S.adminTimer=setTimeout(function(){if(S.ae&&S.v!=='op')rAD();},ADM_REFRESH);
+  S.adminTimer=setTimeout(function(){if(S.ae&&S.v!=='op'){stopAdminTick();rAD();}},ADM_REFRESH);
 }
 
-// Admin opens machine — read-only, full live view with auto-refresh
 function aVJ(c){
   var all=Object.assign({},SAMPLE,S.aj),j=all[c];if(!j)return;
+  stopAdminTick();
   if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}
   if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
   if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
@@ -284,7 +326,7 @@ function aVJ(c){
   S.opTimer=setInterval(pullLive, ADM_REFRESH);
   S.tickTimer=setInterval(tick, 1000);
 }
-function aLO(){S.ae=null;if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}try{localStorage.removeItem('IEA');}catch(x){}rSU();}
+function aLO(){S.ae=null;stopAdminTick();if(S.adminTimer){clearTimeout(S.adminTimer);S.adminTimer=null;}try{localStorage.removeItem('IEA');}catch(x){}rSU();}
 
 // ---- SUPERVISOR ----
 function rSU(){
@@ -326,7 +368,7 @@ function oOP(c){
   if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
   S.opTimer=setInterval(pullLive, OP_REFRESH);
   S.tickTimer=setInterval(tick, 1000);
-  requestWakeLock();  // Keep screen awake
+  requestWakeLock();
 }
 
 function rOP(){
@@ -362,7 +404,7 @@ function uOU(){
   if(S.sl){var s=S.sl,la=$('sla');if(la)la.innerHTML='<div class="sl fi"><h3>'+(s.ok?'Logged':'Saving...')+'</h3><table class="st"><thead><tr><th>IE</th><th>Mch</th><th>Setup</th><th>Cycle</th><th>QC</th><th>Bd</th><th>Total</th><th>Eff</th></tr></thead><tbody><tr><td class="mono" style="color:var(--gold)">'+e(s.ie)+'</td><td>'+e(s.mc)+'</td><td style="color:var(--purple)">'+fmt(s.su)+'</td><td style="color:var(--cyan)">'+fmt(s.cy)+'</td><td style="color:var(--amber)">'+fmt(s.qc)+'</td><td style="color:var(--red)">'+fmt(s.bd)+'</td><td style="font-weight:700">'+fmt(s.to)+'</td><td style="color:'+(s.ef>=90?'var(--green)':s.ef>=70?'var(--amber)':'var(--red)')+';font-weight:900">'+s.ef+'%</td></tr></tbody></table><p style="font-size:9px;color:var(--green);margin-top:6px">Logged to sheet.</p></div>';}
 }
 
-function gB(){releaseWakeLock();if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}S.v='sup';S.pc=null;S.j=null;S.sl=null;S.phaseStart=null;var wasAdmin=S.isAdmin;S.isAdmin=false;if(S.ae||wasAdmin){S.v='admin';rAD();}else rSU();}
+function gB(){releaseWakeLock();stopAdminTick();if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}S.v='sup';S.pc=null;S.j=null;S.sl=null;S.phaseStart=null;var wasAdmin=S.isAdmin;S.isAdmin=false;if(S.ae||wasAdmin){S.v='admin';rAD();}else rSU();}
 
 function init(){var p=new URLSearchParams(window.location.search),c=p.get('code'),m=p.get('mode');
   if(m==='admin'){oAL();return;}
