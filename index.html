@@ -42,6 +42,11 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 .ab:active{transform:scale(.96)}.ab.ac2{background:var(--bc);color:#fff;--gc:var(--bc);animation:gp 2s ease-in-out infinite}.ab:disabled{opacity:.3;cursor:not-allowed;animation:none}
 .enb{display:block;width:calc(100% - 32px);margin:0 16px 14px;padding:14px;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;border:2px solid var(--red);background:var(--bg3);color:var(--red);-webkit-tap-highlight-color:transparent}
 .enb:active{transform:scale(.97)}.enb.dn{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.08)}.enb:disabled{opacity:.25;cursor:not-allowed}
+/* Drawing button — prominent, full-width, easy to tap */
+.dwb{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);margin:0 16px 12px;padding:13px;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;border:2px solid var(--blue);background:rgba(96,165,250,.08);color:var(--blue);text-decoration:none;-webkit-tap-highlight-color:transparent;transition:all .2s}
+.dwb:active{transform:scale(.97);background:rgba(96,165,250,.18)}
+.dwb.dis{opacity:.35;cursor:not-allowed;border-color:var(--dim);color:var(--dim);background:var(--bg3)}
+.dwb svg{width:18px;height:18px}
 .sl{margin:0 16px 16px;background:var(--bg3);border:1px solid var(--green);border-radius:10px;padding:12px;position:relative;overflow:hidden}
 .sl::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
 .sl h3{font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
@@ -65,7 +70,6 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 .nb{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;-webkit-tap-highlight-color:transparent}.nb:active{background:var(--bg3)}
 .er{display:flex;gap:12px;align-items:center;padding:5px 16px 8px;background:var(--bg2);border-bottom:1px solid var(--border)}
 .ei{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}.ei span{font-size:11px;font-weight:600}
-.dl{font-size:10px;color:var(--blue);text-decoration:none;border:1px solid rgba(96,165,250,.3);padding:3px 8px;border-radius:5px}
 .lw{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:20px}
 .lb{background:var(--bg3);border:1px solid var(--gold);border-radius:14px;padding:24px;width:100%;max-width:340px;text-align:center;position:relative;overflow:hidden}
 .lb::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
@@ -94,7 +98,7 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 <body>
 <div id="app"></div>
 <script>
-var API_URL='https://script.google.com/macros/s/AKfycbwQwQmVTclkU1__zxWXMRlXWQLlXJXxjqJYPDbAeAIKccU1ZUOom4No8YrRei4o_RkK/exec';
+var API_URL='https://script.google.com/macros/s/AKfycbzb7VZXdZo4b5vwXQc7YPMu888cVzS5ogEZwXKdOecMDlL3gtdVkT_42jh-WtWE0yfI/exec';
 var MACHINES=['VMC-1','VMC-2','VMC-3','VMC-4','VMC-5','VMC-6','VMC-7','HMC-1','HMC-2','HMC-3'];
 var ADMIN_EMAILS=['vicky@inderent.com','chiranjeev@inderent.com','raoinderjeet@yahoo.com','sachin.s@inderent.com'];
 var OP_REFRESH=10*1000;
@@ -102,8 +106,7 @@ var ADM_REFRESH=30*1000;
 var SAMPLE={},LIVE={},SHEET_LOADED=false;
 var COL={setup:{c:'#a855f7',b:'rgba(168,85,247,.08)',l:'Setup'},running:{c:'#22d3ee',b:'rgba(34,211,238,.08)',l:'Cutting'},qchold:{c:'#fbbf24',b:'rgba(251,191,36,.08)',l:'QC Hold'},breakdown:{c:'#f87171',b:'rgba(248,113,113,.08)',l:'Breakdown'}};
 
-// Admin local tick: stores {phase, phaseStart, baseSecs, fetchedAt} per productionCode
-// so machine cards tick every second instead of freezing between 30s refreshes.
+// Admin local tick — machine cards update every second locally
 var ADMIN_PHASE_START={};
 var ADMIN_TICK_TIMER=null;
 
@@ -118,13 +121,27 @@ function apiPost(d){return fetch(API_URL,{method:'POST',redirect:'follow',header
 
 var S={v:'sup',pc:null,j:null,ap:null,te:0,done:false,sl:null,sf:false,aj:{},ls:0,ae:null,operators:null,nextCode:null,adminTimer:null,opTimer:null,tickTimer:null,phaseStart:null,isAdmin:false,busy:false,
   baseSetup:0,baseRunning:0,baseQchold:0,baseBreakdown:0,
-  dispSetup:0,dispRunning:0,dispQchold:0,dispBreakdown:0};
+  dispSetup:0,dispRunning:0,dispQchold:0,dispBreakdown:0,
+  // FRONTEND MONOTONIC GUARD: high-water marks. Display can never go below these.
+  // Defends against any server response that returns a smaller value (clock skew,
+  // race condition, retry of stale state). Reset only when job changes / ends.
+  hwSetup:0,hwRunning:0,hwQchold:0,hwBreakdown:0};
 
 function applyLive(lv){
   if(!lv)return;
   S.ap=lv.currentPhase||null;
   S.phaseStart=lv.phaseStartedAt||null;
   var s=lv.setupSec||0, r=lv.cycleSec||0, q=lv.qcHoldSec||0, b=lv.breakdownSec||0;
+
+  // FRONTEND MONOTONIC GUARD — never accept a server value smaller than what
+  // we've already shown. This makes the timer truly tamper-proof: even if
+  // the server has a bug or the network returns a stale response, the displayed
+  // time never jumps backward within the same job session.
+  if(s < S.hwSetup) s = S.hwSetup;
+  if(r < S.hwRunning) r = S.hwRunning;
+  if(q < S.hwQchold) q = S.hwQchold;
+  if(b < S.hwBreakdown) b = S.hwBreakdown;
+
   var elapsed=0;
   if(S.phaseStart && S.ap){
     var ps=new Date(S.phaseStart);
@@ -161,16 +178,16 @@ function tick(){
   S.dispRunning = S.baseRunning + (S.ap==='running'?elapsed:0);
   S.dispQchold = S.baseQchold + (S.ap==='qchold'?elapsed:0);
   S.dispBreakdown = S.baseBreakdown + (S.ap==='breakdown'?elapsed:0);
+  // Push high-water marks forward as displayed values grow
+  if(S.dispSetup > S.hwSetup) S.hwSetup = S.dispSetup;
+  if(S.dispRunning > S.hwRunning) S.hwRunning = S.dispRunning;
+  if(S.dispQchold > S.hwQchold) S.hwQchold = S.dispQchold;
+  if(S.dispBreakdown > S.hwBreakdown) S.hwBreakdown = S.dispBreakdown;
   S.te = S.dispSetup + S.dispRunning + S.dispQchold + S.dispBreakdown;
   uTD();
 }
 
-// ============================================================
-// ADMIN LOCAL TICK — machine cards update every second without
-// waiting for the 30-second full refresh of renderAD().
-// Stores base seconds + phaseStart time from each getLiveStatus
-// fetch, then adds elapsed locally on each 1s tick.
-// ============================================================
+// Admin local tick (machine cards 1s update)
 function startAdminTick(){
   stopAdminTick();
   ADMIN_TICK_TIMER=setInterval(function(){
@@ -181,10 +198,8 @@ function startAdminTick(){
       if(!td||!td.phase||td.phase==='idle')return;
       var elapsed=td.phaseStart?Math.max(0,Math.floor((now-td.phaseStart)/1000)):0;
       var tot=td.baseTotal+elapsed;
-      // Update total timer
       var totEl=el.querySelector('.adm-tot');
       if(totEl)totEl.textContent=fmt(tot);
-      // Update individual phase timers
       var phEls=el.querySelectorAll('[data-adm-ph]');
       phEls.forEach(function(pe){
         var ph=pe.getAttribute('data-adm-ph');
@@ -268,7 +283,7 @@ function rAD(){
     apiGet({action:'getLiveStatus'}).catch(function(){return{success:false};})
   ]).then(function(r){
     var jd=r[0],ld=r[1],cc={};
-    if(jd.success&&jd.jobs){SAMPLE={};SHEET_LOADED=true;jd.jobs.forEach(function(j){SAMPLE[j.productionCode]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:j.status.toLowerCase()};});}
+    if(jd.success&&jd.jobs){SAMPLE={};SHEET_LOADED=true;jd.jobs.forEach(function(j){SAMPLE[j.productionCode]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'',operator:j.operator,sts:j.status.toLowerCase()};});}
     if(jd.success&&jd.completedCodes)jd.completedCodes.forEach(function(c){cc[c]=true;});
     LIVE={};
     ADMIN_PHASE_START={};
@@ -276,7 +291,6 @@ function rAD(){
     if(ld.success&&ld.machines)ld.machines.forEach(function(m){
       if(cc[m.productionCode]||m.currentPhase==='completed')return;
       LIVE[m.productionCode]=m;
-      // Store tick data for local 1s updates between full refreshes
       var phaseStartMs=0;
       if(m.phaseStartedAt){var ps=new Date(m.phaseStartedAt);if(!isNaN(ps.getTime()))phaseStartMs=ps.getTime();}
       ADMIN_PHASE_START[m.productionCode]={
@@ -306,7 +320,6 @@ function renderAD(){
       var mc=mm[m],ir=mc.s==='running'&&mc.j,lv=mc.lv;
       var phase=ir?mc.j.ap:null,pc=phase&&COL[phase]?COL[phase].c:'var(--dim)',pl=phase&&COL[phase]?COL[phase].l:'Idle';
       var suS=ir&&lv?lv.setupSec||0:0,cyS=ir&&lv?lv.cycleSec||0:0,qcS=ir&&lv?lv.qcHoldSec||0:0,bdS=ir&&lv?lv.breakdownSec||0:0,elS=ir&&lv?lv.totalSec||0:0;
-      // data-adm-pc marks this card for the 1s tick; data-adm-ph marks individual phase timers
       var phB=ir?'<div class="phb"><div class="phi"><div class="phi-l" style="color:#a855f7">Setup</div><div class="phi-v mono" data-adm-ph="setup" style="color:#a855f7">'+fS(suS)+'</div></div><div class="phi"><div class="phi-l" style="color:#22d3ee">Cycle</div><div class="phi-v mono" data-adm-ph="running" style="color:#22d3ee">'+fS(cyS)+'</div></div><div class="phi"><div class="phi-l" style="color:#fbbf24">QC</div><div class="phi-v mono" data-adm-ph="qchold" style="color:#fbbf24">'+fS(qcS)+'</div></div><div class="phi"><div class="phi-l" style="color:#f87171">Brkdn</div><div class="phi-v mono" data-adm-ph="breakdown" style="color:#f87171">'+fS(bdS)+'</div></div></div>':'';
       return'<div class="mc fi d'+(i%4+1)+'"'+(ir?' data-adm-pc="'+e(mc.j.code)+'"':'')+' onclick="'+(ir?"aVJ('"+e(mc.j.code)+"')":'')+'">'+'<div class="mca" style="background:'+(ir?pc:'var(--border)')+'"></div><div style="display:flex;align-items:center;justify-content:space-between"><span class="mn orb" style="color:'+(ir?'var(--text)':'var(--dim)')+'">'+m+'</span><span class="mty">'+mc.ty+'</span></div><div class="ms" style="color:'+pc+'">'+pl+'</div>'+(ir?'<div class="mie mono">'+e(mc.j.ie)+'</div><div class="mp">'+e(mc.j.part)+' &middot; '+e(mc.j.client)+'</div><div class="mtm mono adm-tot" style="color:'+pc+'">'+fmt(elS)+'</div>'+phB+'<div style="font-size:8px;color:var(--muted);margin-top:2px">'+e(mc.j.operator)+'</div>':'<div class="midl">No active job</div>')+'</div>';
     }).join('')+'</div>';
@@ -320,6 +333,8 @@ function aVJ(c){
   if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
   if(S.tickTimer){clearInterval(S.tickTimer);S.tickTimer=null;}
   S.v='op';S.pc=c;S.j=j;S.sl=null;S.isAdmin=true;S.done=false;
+  // Reset high-water marks for new job
+  S.hwSetup=0;S.hwRunning=0;S.hwQchold=0;S.hwBreakdown=0;
   var lv=LIVE[c];if(lv)applyLive(lv);
   rOP();
   pullLive();
@@ -337,7 +352,7 @@ function rSU(){
     apiGet({action:'getAllJobs'}).catch(function(){return{success:false};}),
     S.operators?Promise.resolve({success:true,operators:S.operators}):apiGet({action:'getOperators'}).catch(function(){return{success:true,operators:[]};})
   ]).then(function(r){
-    if(r[0].success&&r[0].jobs){SAMPLE={};SHEET_LOADED=true;r[0].jobs.forEach(function(j){SAMPLE[j.productionCode]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:j.status.toLowerCase()};});}
+    if(r[0].success&&r[0].jobs){SAMPLE={};SHEET_LOADED=true;r[0].jobs.forEach(function(j){SAMPLE[j.productionCode]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'',operator:j.operator,sts:j.status.toLowerCase()};});}
     if(r[1].success&&r[1].operators)S.operators=r[1].operators;
     renderSU();
   });
@@ -346,13 +361,13 @@ function renderSU(){
   var all=Object.assign({},SAMPLE,S.aj),ent=Object.keys(all),mx=0;
   ent.forEach(function(c){var m=c.match(/\d+$/);if(m)mx=Math.max(mx,parseInt(m[0]));});
   var nc=S.nextCode||'POD-'+String(mx+1).padStart(4,'0'),ol=S.operators||[],fh='';
-  if(S.sf){fh='<div class="af fi"><div class="fg"><div><label>IE number</label><input id="fi2" placeholder="250XXX" class="mono" onchange="doLookupIE()"></div><div><label>Prod code</label><input id="fc" value="'+nc+'" class="mono" readonly style="color:var(--gold)"></div><div><label>Client</label><input id="fcl" placeholder="auto" class="mono" readonly style="color:var(--green)"></div><div><label>Part</label><input id="fp" placeholder="auto" readonly style="color:var(--green)"></div><div><label>Operator</label><select id="fo"><option value="">Select...</option>'+ol.map(function(o){return'<option>'+e(o)+'</option>';}).join('')+'</select></div><div><label>Qty</label><input id="fq" value="1" type="number" min="1"></div><div><label>Machine</label><select id="fm">'+MACHINES.map(function(m){return'<option>'+m+'</option>';}).join('')+'</select></div><div><label>Operation</label><input id="fop" value="OP-40" class="mono"></div><div><label>Setup (min)</label><input id="fs" value="180" type="number"></div><div><label>Cycle (min)</label><input id="fcy" value="480" type="number"></div></div><button class="subm" onclick="aJ()">Allocate</button></div>';}
+  if(S.sf){fh='<div class="af fi"><div class="fg"><div><label>IE number</label><input id="fi2" placeholder="250XXX" class="mono" onchange="doLookupIE()"></div><div><label>Prod code</label><input id="fc" value="'+nc+'" class="mono" readonly style="color:var(--gold)"></div><div><label>Client</label><input id="fcl" placeholder="auto" class="mono" readonly style="color:var(--green)"></div><div><label>Part</label><input id="fp" placeholder="auto" readonly style="color:var(--green)"></div><div><label>Operator</label><select id="fo"><option value="">Select...</option>'+ol.map(function(o){return'<option>'+e(o)+'</option>';}).join('')+'</select></div><div><label>Qty</label><input id="fq" value="1" type="number" min="1"></div><div><label>Machine</label><select id="fm">'+MACHINES.map(function(m){return'<option>'+m+'</option>';}).join('')+'</select></div><div><label>Operation</label><input id="fop" value="OP-40" class="mono"></div><div><label>Setup (min)</label><input id="fs" value="180" type="number"></div><div><label>Cycle (min)</label><input id="fcy" value="480" type="number"></div><div style="grid-column:span 2"><label>Drawing link (URL)</label><input id="fdl" placeholder="https://drive.google.com/..." class="mono"></div></div><button class="subm" onclick="aJ()">Allocate</button></div>';}
   $('app').innerHTML='<div class="hdr"><div><div class="orb" style="font-size:12px;color:var(--gold);letter-spacing:2px">INDER ENTERPRISES</div><div style="font-size:10px;color:var(--muted);margin-top:1px">Supervisor</div></div><div style="display:flex;gap:6px;align-items:center"><button class="nb" onclick="history.back()">&#8592;</button><button class="nb" onclick="history.forward()">&#8594;</button><button class="bb" onclick="oAL()" style="border-color:var(--gold);color:var(--gold);font-size:9px">Admin</button></div></div><div class="sw"><div class="sh"><span class="stl">Allocate</span><button class="adb" onclick="tF()">'+(S.sf?'Cancel':'+ New')+'</button></div>'+fh+'<div class="stl" style="margin-bottom:8px">Active jobs ('+ent.length+')</div>'+(ent.length===0?'<div style="text-align:center;padding:20px;color:var(--dim);font-size:11px">'+(SHEET_LOADED?'No active jobs':'Loading...')+'</div>':'')+ent.map(function(c,i){var j=all[c];return'<div class="jc fi d'+(Math.min(i+1,4))+'" onclick="oOP(\''+e(c)+'\')"><div class="jct"><span class="jcd orb">'+e(c)+'</span><span class="jcm mono">'+e(j.machine)+'</span></div><div class="jci">'+e(j.ie)+' &mdash; '+e(j.part)+'</div><div class="jcs">'+e(j.client)+' &middot; '+e(j.op)+' &middot; Qty:'+j.qty+' &middot; '+e(j.operator)+'</div></div>';}).join('')+'</div>';
 }
 function doLookupIE(){var ie=$('fi2')?$('fi2').value.trim():'';if(!ie||!API_URL)return;apiGet({action:'lookupIE',ie:ie}).then(function(d){if(d.success){if($('fcl'))$('fcl').value=d.client||'';if($('fp'))$('fp').value=d.part||'';}}).catch(function(){});}
 function oAL(){var sv=null;try{sv=localStorage.getItem('IEA');}catch(x){}if(sv&&ADMIN_EMAILS.indexOf(sv)>=0){S.ae=sv;S.v='admin';rAD();}else rAL();}
 function tF(){S.sf=!S.sf;renderSU();if(S.sf)setTimeout(function(){if(API_URL)apiGet({action:'getNextCode'}).then(function(d){if(d.success&&$('fc'))$('fc').value=d.nextCode;}).catch(function(){});},100);}
-function aJ(){var c=$('fc')?$('fc').value.trim():'';if(!c){toast('Code required',1);return;}var ie=$('fi2')?$('fi2').value.trim():'';if(!ie){toast('IE required',1);return;}var jd={ie:ie,client:$('fcl')?$('fcl').value.trim():'',part:$('fp')?$('fp').value.trim()||'Part':'Part',qty:parseInt($('fq')?$('fq').value:'1')||1,op:$('fop')?$('fop').value.trim():'OP-40',machine:$('fm')?$('fm').value:MACHINES[0],estSetup:parseInt($('fs')?$('fs').value:'180')||180,estCycle:parseInt($('fcy')?$('fcy').value:'480')||480,drgLink:'#',operator:$('fo')?$('fo').value||'Operator':'Operator',sts:'idle'};S.aj[c]=jd;if(API_URL)apiPost({action:'allocateJob',productionCode:c,ieNumber:jd.ie,clientName:jd.client,partName:jd.part,machine:jd.machine,operation:jd.op,qty:jd.qty,operator:jd.operator,estSetupMin:jd.estSetup,estCycleMin:jd.estCycle,drawingLink:jd.drgLink}).then(function(d){if(d.success)toast('Allocated: '+c);}).catch(function(){toast('Saved locally',1);});S.sf=false;S.nextCode=null;rSU();}
+function aJ(){var c=$('fc')?$('fc').value.trim():'';if(!c){toast('Code required',1);return;}var ie=$('fi2')?$('fi2').value.trim():'';if(!ie){toast('IE required',1);return;}var dl=$('fdl')?$('fdl').value.trim():'';var jd={ie:ie,client:$('fcl')?$('fcl').value.trim():'',part:$('fp')?$('fp').value.trim()||'Part':'Part',qty:parseInt($('fq')?$('fq').value:'1')||1,op:$('fop')?$('fop').value.trim():'OP-40',machine:$('fm')?$('fm').value:MACHINES[0],estSetup:parseInt($('fs')?$('fs').value:'180')||180,estCycle:parseInt($('fcy')?$('fcy').value:'480')||480,drgLink:dl,operator:$('fo')?$('fo').value||'Operator':'Operator',sts:'idle'};S.aj[c]=jd;if(API_URL)apiPost({action:'allocateJob',productionCode:c,ieNumber:jd.ie,clientName:jd.client,partName:jd.part,machine:jd.machine,operation:jd.op,qty:jd.qty,operator:jd.operator,estSetupMin:jd.estSetup,estCycleMin:jd.estCycle,drawingLink:jd.drgLink}).then(function(d){if(d.success)toast('Allocated: '+c);}).catch(function(){toast('Saved locally',1);});S.sf=false;S.nextCode=null;rSU();}
 
 // ---- OPERATOR opens job ----
 function oOP(c){
@@ -362,6 +377,8 @@ function oOP(c){
   S.ap=null;S.phaseStart=null;S.te=0;
   S.baseSetup=0;S.baseRunning=0;S.baseQchold=0;S.baseBreakdown=0;
   S.dispSetup=0;S.dispRunning=0;S.dispQchold=0;S.dispBreakdown=0;
+  // Reset high-water marks for new job session
+  S.hwSetup=0;S.hwRunning=0;S.hwQchold=0;S.hwBreakdown=0;
   rOP();
   pullLive();
   if(S.opTimer){clearInterval(S.opTimer);S.opTimer=null;}
@@ -372,8 +389,14 @@ function oOP(c){
 }
 
 function rOP(){
-  var j=S.j,adm=S.isAdmin,drg=j.drgLink&&j.drgLink!=='#'?j.drgLink:'';
-  $('app').innerHTML='<div class="hdr fi"><div style="display:flex;align-items:center;gap:6px"><button class="bb" onclick="gB()">&#8592;</button><span style="font-size:10px;color:var(--muted)">Code:</span><span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">'+e(S.pc)+'</span>'+(drg?'<a href="'+e(drg)+'" target="_blank" class="dl" style="margin-left:4px">Drawing</a>':'')+'</div><div style="display:flex;align-items:center;gap:5px">'+(adm?'<span style="font-size:8px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px;border-radius:3px">VIEW ONLY</span>':'')+'<span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span><span id="st" style="font-size:10px;color:var(--muted)">Waiting</span></div></div><div class="ig fi d1"><div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">'+e(j.ie)+'</div></div><div><div class="il">Client</div><div class="iv">'+e(j.client)+'</div></div><div><div class="il">Part</div><div class="iv">'+e(j.part)+'</div></div><div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">'+e(j.machine)+'</div></div><div><div class="il">Qty</div><div class="iv">'+j.qty+'</div></div><div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">'+e(j.op)+'</div></div></div><div class="er fi d1"><div class="ei">Setup: <span style="color:var(--purple)">'+fH(j.estSetup)+'</span></div><div class="ei">Cycle: <span style="color:var(--cyan)">'+fH(j.estCycle)+'</span></div></div><div class="mtw fi d2"><div class="mtl mono">Total elapsed</div><div class="mt orb id" id="mt">00:00:00</div><div id="sbw"></div></div><div class="pg fi d3"><div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div><div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div><div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div><div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div></div><div class="ew fi d3"><div class="eb"><div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div><div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div><div class="em mono"><span>0h</span><span>Est: '+fH(j.estSetup+j.estCycle)+'</span><span>'+fH(Math.round((j.estSetup+j.estCycle)*1.5))+'</span></div></div></div><div class="si" id="si"></div><div class="bg fi d4"><button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')"'+(adm?' disabled':'')+'>Start setup</button><button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')"'+(adm?' disabled':'')+'>Start job</button><button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')"'+(adm?' disabled':'')+'>QC hold</button><button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')"'+(adm?' disabled':'')+'>Breakdown</button></div><button class="enb" id="be" onclick="eJ()" disabled>End job</button><div id="sla"></div>';
+  var j=S.j,adm=S.isAdmin;
+  // Drawing link button — prominent, full-width. Disabled state if no link.
+  var hasDrg = j.drgLink && j.drgLink !== '#' && j.drgLink.trim() !== '';
+  var drgBtn = hasDrg
+    ? '<a class="dwb" href="'+e(j.drgLink)+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>Open drawing</a>'
+    : '<div class="dwb dis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>No drawing attached</div>';
+
+  $('app').innerHTML='<div class="hdr fi"><div style="display:flex;align-items:center;gap:6px"><button class="bb" onclick="gB()">&#8592;</button><span style="font-size:10px;color:var(--muted)">Code:</span><span class="orb" style="font-size:12px;color:var(--gold);letter-spacing:1px">'+e(S.pc)+'</span></div><div style="display:flex;align-items:center;gap:5px">'+(adm?'<span style="font-size:8px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px;border-radius:3px">VIEW ONLY</span>':'')+'<span id="ld" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--dim)"></span><span id="st" style="font-size:10px;color:var(--muted)">Waiting</span></div></div><div class="ig fi d1"><div><div class="il">IE no.</div><div class="iv" style="color:var(--gold)">'+e(j.ie)+'</div></div><div><div class="il">Client</div><div class="iv">'+e(j.client)+'</div></div><div><div class="il">Part</div><div class="iv">'+e(j.part)+'</div></div><div><div class="il">Machine</div><div class="iv" style="color:var(--cyan)">'+e(j.machine)+'</div></div><div><div class="il">Qty</div><div class="iv">'+j.qty+'</div></div><div><div class="il">Operation</div><div class="iv" style="color:var(--purple)">'+e(j.op)+'</div></div></div><div class="er fi d1"><div class="ei">Setup: <span style="color:var(--purple)">'+fH(j.estSetup)+'</span></div><div class="ei">Cycle: <span style="color:var(--cyan)">'+fH(j.estCycle)+'</span></div></div>'+drgBtn+'<div class="mtw fi d2"><div class="mtl mono">Total elapsed</div><div class="mt orb id" id="mt">00:00:00</div><div id="sbw"></div></div><div class="pg fi d3"><div class="pb" id="pb0" style="--pc:var(--purple)"><div class="pl">Setup</div><div class="ptm mono" id="pt0">00:00:00</div></div><div class="pb" id="pb1" style="--pc:var(--cyan)"><div class="pl">Cycle</div><div class="ptm mono" id="pt1">00:00:00</div></div><div class="pb" id="pb2" style="--pc:var(--amber)"><div class="pl">QC hold</div><div class="ptm mono" id="pt2">00:00:00</div></div><div class="pb" id="pb3" style="--pc:var(--red)"><div class="pl">Brkdown</div><div class="ptm mono" id="pt3">00:00:00</div></div></div><div class="ew fi d3"><div class="eb"><div class="eh"><span class="el mono">Efficiency</span><span class="ev orb" id="ep" style="color:var(--dim)">---</span></div><div class="ebar"><div class="efill" id="ef" style="width:0%"></div></div><div class="em mono"><span>0h</span><span>Est: '+fH(j.estSetup+j.estCycle)+'</span><span>'+fH(Math.round((j.estSetup+j.estCycle)*1.5))+'</span></div></div></div><div class="si" id="si"></div><div class="bg fi d4"><button class="ab" id="b0" style="--bc:var(--purple)" onclick="sP(\'setup\')"'+(adm?' disabled':'')+'>Start setup</button><button class="ab" id="b1" style="--bc:var(--cyan)" onclick="sP(\'running\')"'+(adm?' disabled':'')+'>Start job</button><button class="ab" id="b2" style="--bc:var(--amber)" onclick="sP(\'qchold\')"'+(adm?' disabled':'')+'>QC hold</button><button class="ab" id="b3" style="--bc:var(--red)" onclick="sP(\'breakdown\')"'+(adm?' disabled':'')+'>Breakdown</button></div><button class="enb" id="be" onclick="eJ()" disabled>End job</button><div id="sla"></div>';
   uOU();
 }
 
@@ -409,7 +432,7 @@ function gB(){releaseWakeLock();stopAdminTick();if(S.opTimer){clearInterval(S.op
 function init(){var p=new URLSearchParams(window.location.search),c=p.get('code'),m=p.get('mode');
   if(m==='admin'){oAL();return;}
   if(c){
-    if(API_URL){apiGet({action:'getJob',code:c}).then(function(r){if(r.success&&r.job){var j=r.job;SAMPLE[c]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'#',operator:j.operator,sts:'idle'};oOP(c);}else rSU();}).catch(function(){rSU();});}
+    if(API_URL){apiGet({action:'getJob',code:c}).then(function(r){if(r.success&&r.job){var j=r.job;SAMPLE[c]={ie:j.ieNumber,client:j.clientName,part:j.partName,qty:j.qty,op:j.operation,machine:j.machine,estSetup:j.estSetupMin,estCycle:j.estCycleMin,drgLink:j.drawingLink||'',operator:j.operator,sts:'idle'};oOP(c);}else rSU();}).catch(function(){rSU();});}
     else if(SAMPLE[c])oOP(c);else rSU();
   }else rSU();
 }
